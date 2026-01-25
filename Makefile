@@ -15,4 +15,4 @@ clean:
 
 lint:
 	python3 -m flake8 . --exclude=.venv
-	python3 -m mypy . --exclude .venv --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	python3 -m mypy . --exclude "(.venv|build)" --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
