@@ -26,6 +26,8 @@ class Config:
     exit: tuple[int, int]
     output_file: str
     perfect: bool
+    seed: int | None = None
+    algo: str | None = None
     _data_str: dict[str, str]
 
     def __init__(self, path: str) -> None:
@@ -53,7 +55,7 @@ class Config:
                     key, value = line.split("=", 1)
                     self._data_str[key.strip().upper()] = value.strip()
         except FileNotFoundError:
-            raise ValueError(f"Config file not found: {self.path}")
+            raise FileNotFoundError(f"Config file not found: {self.path}")
 
     def _parse(self) -> None:
         """Parses raw strings into specific data types and validates them.
@@ -67,6 +69,10 @@ class Config:
         self.exit = self._parse_tuple("EXIT")
         self.output_file = self._parse_filename("OUTPUT_FILE")
         self.perfect = self._parse_bool("PERFECT")
+        if "SEED" in self._data_str:
+            self.seed = self._parse_int("SEED")
+        if "ALGO" in self._data_str:
+            self.algo = self._parse_algo("ALGO")
         if self.entry == self.exit:
             raise InvalidFormat("ENTRY and EXIT must be different")
 
@@ -133,6 +139,24 @@ class Config:
         if value == "false":
             return False
         raise InvalidFormat(f"{key} must be True or False")
+
+    def _parse_algo(self, key: str) -> str:
+        """Converts a config value to a string.
+
+        Args:
+            key: The config key to parse.
+
+        Returns:
+            A string to represent maze generation algorithm.
+
+        Raises:
+            InvalidFormat: If the value is neither "DFS" nor "Prim".
+        """
+        value = self._data_str[key].upper()
+        if value == "DFS" or value == "PRIM":
+            return value
+        else:
+            raise InvalidFormat(f"{key} must be DFS or PRIM")
 
     def _parse_filename(self, key: str) -> str:
         """Validates the output filename.

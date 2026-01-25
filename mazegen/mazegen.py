@@ -105,6 +105,39 @@ class Maze:
             cell1.north = False
             cell2.south = False
 
+    def to_hex_str(self) -> str:
+        """Converts the maze structure into a hexadecimal string.
+
+        Each cell is encoded into a hex digit based on its walls.
+        Bit 0 for North wall, bit 1 for East, bit 2 for South, bit 3 for West.
+        For example, 9 represents a cell with walls on North(1) and West(8)
+        Rows are separated by newlines.
+
+        Returns:
+            str: The maze encoded as hexadecimal digits.
+        """
+        lines = []
+        for row in range(self.height):
+            row_data = []
+            for col in range(self.width):
+                cell = self.get_cell((row, col))
+
+                val = 0
+                if cell.north:
+                    val |= (1 << 0)
+                if cell.east:
+                    val |= (1 << 1)
+                if cell.south:
+                    val |= (1 << 2)
+                if cell.west:
+                    val |= (1 << 3)
+
+                row_data.append(format(val, 'x'))
+
+            lines.append("".join(row_data))
+
+        return "\n".join(lines)
+
 
 class MazeGenerator:
     """Maze generator controller.
@@ -113,13 +146,13 @@ class MazeGenerator:
     based on given parameters.
 
     Attributes:
-        width (int): Width of the maze in number of cells.
-        height (int): Height of the maze in number of cells.
-        entry (tuple[int, int]): Entry cell position (row, col).
-        exit (tuple[int, int]): Exit cell position (row, col).
-        perfect (bool): Whether the generated maze is perfect.
-        seed (int | None): Random seed for maze generation.
-        grid (Maze): Generated maze structure.
+        _width (int): Width of the maze in number of cells.
+        _height (int): Height of the maze in number of cells.
+        _entry (tuple[int, int]): Entry cell position (row, col).
+        _exit (tuple[int, int]): Exit cell position (row, col).
+        _perfect (bool): Whether the generated maze is perfect.
+        _seed (int | None): Random seed for maze generation.
+        _grid (Maze): Generated maze structure.
     """
     _width: int
     _height: int
@@ -129,11 +162,13 @@ class MazeGenerator:
     _seed: random.Random
     _grid: Maze
     _pattern: set[tuple[int, int]]
+    _algo: str | None
 
     def __init__(
         self, width: int, height: int,
         entry: tuple[int, int], exit_: tuple[int, int],
-        perfect: bool = True, seed: int | None = None
+        perfect: bool = True, seed: int | None = None,
+        algo: str | None = None
     ):
         self._width = width
         self._height = height
@@ -143,6 +178,7 @@ class MazeGenerator:
         self._seed = random.Random(seed)
         self._grid = Maze(width, height, entry, exit_)
         self._pattern = self._make_pattern()
+        self._algo = algo
 
     def _make_pattern(self) -> set[tuple[int, int]]:
         """Return coordinates forming a '42' pattern.
@@ -330,7 +366,7 @@ class MazeGenerator:
             return cell1.east
         return False
 
-    def _check_2x2(self, row, col) -> bool:
+    def _check_2x2(self, row: int, col: int) -> bool:
         """Checks if breaking a wall creates a 2x2 area.
 
         Args:

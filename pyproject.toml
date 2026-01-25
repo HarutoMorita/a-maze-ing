@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mazegen-hmodao"  # あなたのユーザー名などを付けて一意にします
+version = "1.0.0"
+description = "A standalone maze generator with '42' pattern support"
+readme = "README.md"
+authors = [
+    { name = "Haruto Morita"},
+	{ name = "Daichi Ogawa"}
+]
+requires-python = ">=3.10"
+license = "MIT"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mazegen*"]
