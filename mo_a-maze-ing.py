@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
-import config
-from mazegen import Maze, MazeGenerator
+import mo_config
+from mazegen.mo__init__ import Maze, MazeGenerator
 
 
 def main() -> None:
@@ -11,14 +11,14 @@ def main() -> None:
         print("Usage: python3 a-maze-ing.py <config text file>")
     else:
         try:
-            setting = config.Config(sys.argv[1])
+            setting = mo_config.Config(sys.argv[1])
             mazegen = MazeGenerator(
                 setting.width, setting.height,
                 setting.entry, setting.exit, setting.perfect,
                 setting.seed, setting.algo)
             maze: Maze = mazegen.generate()
             print(maze)
-        except config.InvalidFormat as e:
+        except mo_config.InvalidFormat as e:
             print(f"Config invalid format: {e}", file=sys.stderr)
         except ValueError as e:
             print(f"Config invalid values: {e}", file=sys.stderr)
