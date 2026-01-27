@@ -213,7 +213,13 @@ class MazeGenerator:
 
         return pattern_pos
 
-    def generate(self) -> Maze:
+    def generate(self):
+        if self._algo == "dfs":
+            self.generate_dfs()
+        elif self._algo == "prim":
+            self.generate_prim()
+
+    def generate_prim(self) -> Maze:
         """Generates a maze using Prim's algorithm.
 
         Returns:
