@@ -44,16 +44,13 @@ def display_maze(maze_gen):
         }
     ]
 
-    def create_window():
-        win_width = state["maze"].width * pixel
-        win_height = state["maze"].height * + menu_height
+    win_width = state["maze"].width * pixel
+    win_height = state["maze"].height * + menu_height
 
-        state["win_ptr"] = m.mlx_new_window(
-            mlx_ptr, win_width, win_height, "A-maze-ing")
-        state["img_ptr"] = m.mlx_new_image(
-            mlx_ptr, win_width, win_height)
-
-    create_window()
+    state["win_ptr"] = m.mlx_new_window(
+        mlx_ptr, win_width, win_height, "A-maze-ing")
+    state["img_ptr"] = m.mlx_new_image(
+        mlx_ptr, win_width, win_height)
 
     def update_buffer():
         p = colors[state["color_mode"]]
@@ -109,9 +106,16 @@ def display_maze(maze_gen):
 
     def handle_key(keycode, param):
         if keycode == 65307 or keycode == 53:
+            if state["img_ptr"]:
+                m.mlx_destroy_image(mlx_ptr, state["img_ptr"])
+            if state["win_ptr"]:
+                m.mlx_destroy_window(mlx_ptr, state["win_ptr"])
             os._exit(0)
         elif keycode == 114:
+            if state["img_ptr"]:
+                m.mlx_destroy_image(mlx_ptr, state["img_ptr"])
             state["maze"] = maze_gen.generate()
+            state["img_ptr"] = m.mlx_new_image(mlx_ptr, win_width, win_height)
             state["needs_update"] = True
         elif keycode == 112:
             state["show_path"] = not state["show_path"]
