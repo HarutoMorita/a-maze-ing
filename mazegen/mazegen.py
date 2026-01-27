@@ -7,28 +7,36 @@ class Cell:
     """
     A single maze cell.
 
-    Each cell has up to four walls, one for each direction.
-    A wall is True if closed, False if open.
+    Each cell is encoded into a hex digit based on its walls.
+    Bit 0 for North wall, bit 1 for East, bit 2 for South, bit 3 for West.
+    For example, 9 represents a cell with walls on North(1) and West(8)
+
 
     Attributes:
-        north (bool): If the north wall is closed.
-        east (bool): If the east wall is closed.
-        south (bool): If the south wall is closed.
-        west (bool): If the west wall is closed.
+        value (int): The hex value representing each wall's status.
+        is_entry (bool): If the cell is entry.
+        is_exit (bool): If the cell is exit.
+        is_pattern (bool): If the cell is the part of pattern.
+        is_path (bool): If the cell is the part of path.
     """
+    WALL_BITS = {'N': 1 << 0, 'E': 1 << 1, 'S': 1 << 2, 'W': 1 << 3}
 
-    north: bool
-    east: bool
-    south: bool
-    west: bool
+    value: int
+    is_entry: bool
+    is_exit: bool
+    is_pattern: bool
+    is_path: bool
 
-    def __init__(
-        self, north: bool, east: bool, south: bool, west: bool
-    ):
-        self.north = north
-        self.east = east
-        self.south = south
-        self.west = west
+    def __init__(self):
+        self.value = 0xF
+        self.is_entry = False
+        self.is_exit = False
+        self.is_pattern = False
+        self.is_path = False
+
+    def remove_wall(self, direction: str) -> None:
+        if direction in self.WALL_BITS:
+            self.value &= ~self.WALL_BITS[direction]
 
 
 class Maze:
@@ -57,10 +65,9 @@ class Maze:
         self.height = height
         self.entry = entry
         self.exit_ = exit_
-        self.grid = [
-            [Cell(True, True, True, True) for _ in range(width)]
-            for _ in range(height)
-        ]
+        self.grid = [[Cell() for _ in range(width)] for _ in range(height)]
+        self.get_cell(entry).is_entry = True
+        self.get_cell(exit_).is_exit = True
 
     def get_cell(self, pos: tuple[int, int]) -> Cell:
         """Return the cell at the given position.
@@ -71,8 +78,8 @@ class Maze:
         Returns:
             Cell: The cell located at the passed position.
         """
-        row, col = pos
-        return self.grid[row][col]
+        x, y = pos
+        return self.grid[y][x]
 
     def open_wall(self, pos1: tuple[int, int], pos2: tuple[int, int]) -> None:
         """Open the wall between two adjacent cells.
@@ -85,58 +92,31 @@ class Maze:
             pos1 (tuple[int, int]): Position of the first cell(row, col).
             pos2 (tuple[int, int]): Position of the second cell(row, col).
         """
-        row1, col1 = pos1
-        row2, col2 = pos2
-        if abs(row1 - row2) + abs(col1 - col2) != 1:
+        x1, y1 = pos1
+        x2, y2 = pos2
+        if abs(x1 - x2) + abs(y1 - y2) != 1:
             return
         cell1 = self.get_cell(pos1)
         cell2 = self.get_cell(pos2)
 
-        if col1 + 1 == col2:
-            cell1.east = False
-            cell2.west = False
-        elif col1 - 1 == col2:
-            cell1.west = False
-            cell2.east = False
-        elif row1 + 1 == row2:
-            cell1.south = False
-            cell2.north = False
-        elif row1 - 1 == row2:
-            cell1.north = False
-            cell2.south = False
+        if y1 > y2:
+            cell1.remove_wall('N')
+            cell2.remove_wall('S')
+        elif x1 < x2:
+            cell1.remove_wall('E')
+            cell2.remove_wall('W')
+        elif y1 < y2:
+            cell1.remove_wall('S')
+            cell2.remove_wall('N')
+        elif x1 > x2:
+            cell1.remove_wall('W')
+            cell2.remove_wall('E')
 
-    def to_hex_str(self) -> str:
-        """Converts the maze structure into a hexadecimal string.
-
-        Each cell is encoded into a hex digit based on its walls.
-        Bit 0 for North wall, bit 1 for East, bit 2 for South, bit 3 for West.
-        For example, 9 represents a cell with walls on North(1) and West(8)
-        Rows are separated by newlines.
-
-        Returns:
-            str: The maze encoded as hexadecimal digits.
-        """
-        lines = []
-        for row in range(self.height):
-            row_data = []
-            for col in range(self.width):
-                cell = self.get_cell((row, col))
-
-                val = 0
-                if cell.north:
-                    val |= (1 << 0)
-                if cell.east:
-                    val |= (1 << 1)
-                if cell.south:
-                    val |= (1 << 2)
-                if cell.west:
-                    val |= (1 << 3)
-
-                row_data.append(format(val, 'x'))
-
-            lines.append("".join(row_data))
-
-        return "\n".join(lines)
+    def __str__(self) -> str:
+        return "\n".join(
+            "".join(format(c.value, 'x') for c in row)
+            for row in self.grid
+        )
 
 
 class MazeGenerator:
@@ -163,6 +143,7 @@ class MazeGenerator:
     _grid: Maze
     _pattern: set[tuple[int, int]]
     _algo: str | None
+    _is_re: bool
 
     def __init__(
         self, width: int, height: int,
@@ -175,10 +156,10 @@ class MazeGenerator:
         self._entry = entry
         self._exit = exit_
         self._perfect = perfect
+        self._initial_seed = seed
         self._seed = random.Random(seed)
-        self._grid = Maze(width, height, entry, exit_)
-        self._pattern = self._make_pattern()
         self._algo = algo
+        self._is_re = False
 
     def _make_pattern(self) -> set[tuple[int, int]]:
         """Return coordinates forming a '42' pattern.
@@ -207,15 +188,15 @@ class MazeGenerator:
                   file=sys.stderr)
             return set()
 
-        offset_row = (self._height - pat_height) // 2
-        offset_col = (self._width - pat_width) // 2
+        offset_y = (self._height - pat_height) // 2
+        offset_x = (self._width - pat_width) // 2
 
         pattern_pos: set[tuple[int, int]] = set()
 
-        for row in range(pat_height):
-            for col in range(pat_width):
-                if pattern[row][col]:
-                    pattern_pos.add((offset_row + row, offset_col + col))
+        for py in range(pat_height):
+            for px in range(pat_width):
+                if pattern[py][px]:
+                    pattern_pos.add((offset_x + px, offset_y + py))
         if self._entry in pattern_pos:
             print(f"Error: the '42' pattern is omitted "
                   f"because it covers the entry position {self._entry}",
@@ -227,6 +208,9 @@ class MazeGenerator:
                   file=sys.stderr)
             return set()
 
+        for pos in pattern_pos:
+            self._grid.get_cell(pos).is_pattern = True
+
         return pattern_pos
 
     def generate(self) -> Maze:
@@ -235,6 +219,13 @@ class MazeGenerator:
         Returns:
             Maze: The generated maze object.
         """
+        self._grid = Maze(self._width, self._height, self._entry, self._exit)
+        self._pattern = self._make_pattern()
+        if self._initial_seed is not None:
+            self._seed = random.Random(self._initial_seed)
+        else:
+            pass
+
         visited: set[tuple[int, int]] = set()
         options: list[tuple[int, int]] = []
 
@@ -260,6 +251,7 @@ class MazeGenerator:
 
         if not self._perfect:
             self._add_loops()
+
         return self._grid
 
     def _add_options(
@@ -309,15 +301,15 @@ class MazeGenerator:
         Returns:
             list[tuple[int, int]]: List of valid neighbor coordinates.
         """
-        row, col = pos
+        x, y = pos
         neighbors = [
-            (row - 1, col), (row + 1, col),
-            (row, col - 1), (row, col + 1),
+            (x, y - 1), (x, y + 1),
+            (x - 1, y), (x + 1, y),
         ]
         return [
-            (row_nei, col_nei)
-            for row_nei, col_nei in neighbors
-            if 0 <= row_nei < self._height and 0 <= col_nei < self._width
+            (nx, ny)
+            for nx, ny in neighbors
+            if 0 <= nx < self._width and 0 <= ny < self._height
         ]
 
     def _add_loops(self) -> None:
@@ -326,12 +318,12 @@ class MazeGenerator:
         It opens some walls without creating 2x2 area.
         """
         adjacent_pairs = []
-        for row in range(self._height):
-            for col in range(self._width):
-                if row < self._height - 1:
-                    adjacent_pairs.append(((row, col), (row + 1, col)))
-                if col < self._width - 1:
-                    adjacent_pairs.append(((row, col), (row, col + 1)))
+        for y in range(self._height):
+            for x in range(self._width):
+                if y < self._height - 1:
+                    adjacent_pairs.append(((x, y), (x, y + 1)))
+                if x < self._width - 1:
+                    adjacent_pairs.append(((x, y), (x + 1, y)))
 
         self._seed.shuffle(adjacent_pairs)
         limit = (self._width * self._height) // 20
@@ -357,16 +349,21 @@ class MazeGenerator:
         Returns:
             bool: True if the wall is closed, False otherwise.
         """
-        row1, col1 = pos1
-        row2, col2 = pos2
+        x1, y1 = pos1
+        x2, y2 = pos2
         cell1: Cell = self._grid.get_cell(pos1)
-        if row1 < row2:
-            return cell1.south
-        if col1 < col2:
-            return cell1.east
+        cell2: Cell = self._grid.get_cell(pos2)
+        if y1 < y2:
+            return bool(cell1.value & (1 << 2))
+        if y1 > y2:
+            return bool(cell2.value & (1 << 2))
+        if x1 < x2:
+            return bool(cell1.value & (1 << 1))
+        if x1 > x2:
+            return bool(cell2.value & (1 << 1))
         return False
 
-    def _check_2x2(self, row: int, col: int) -> bool:
+    def _check_2x2(self, x: int, y: int) -> bool:
         """Checks if breaking a wall creates a 2x2 area.
 
         Args:
@@ -376,17 +373,17 @@ class MazeGenerator:
         Returns:
             bool: True if three or more walls are already open in the 2x2 area.
         """
-        left_top = self._grid.get_cell((row, col))
-        right_top = self._grid.get_cell((row, col + 1))
-        left_bot = self._grid.get_cell((row + 1, col))
+        left_top = self._grid.get_cell((x, y))
+        right_top = self._grid.get_cell((x + 1, y))
+        left_bot = self._grid.get_cell((x, y + 1))
         counter = 0
-        if not left_top.east:
+        if not (left_top.value & (1 << 1)):
             counter += 1
-        if not left_top.south:
+        if not (left_top.value & (1 << 2)):
             counter += 1
-        if not right_top.south:
+        if not (right_top.value & (1 << 2)):
             counter += 1
-        if not left_bot.east:
+        if not (left_bot.value & (1 << 1)):
             counter += 1
         return counter >= 3
 
@@ -403,17 +400,17 @@ class MazeGenerator:
             bool: True if breaking the wall is not making 2x2 area.
         """
 
-        row1, col1 = pos1
-        row2, _ = pos2
-        if row1 < row2:
-            if col1 > 0 and self._check_2x2(row1, col1 - 1):
+        x1, y1 = pos1
+        x2, y2 = pos2
+        if y1 < y2:
+            if x1 > 0 and self._check_2x2(x1 - 1, y1):
                 return False
-            if col1 < self._width - 1 and self._check_2x2(row1, col1):
+            if x1 < self._width - 1 and self._check_2x2(x1, y1):
                 return False
         else:
-            if row1 > 0 and self._check_2x2(row1 - 1, col1):
+            if y1 > 0 and self._check_2x2(x1, y1 - 1):
                 return False
-            if row1 < self._height - 1 and self._check_2x2(row1, col1):
+            if y1 < self._height - 1 and self._check_2x2(x1, y1):
                 return False
 
         return True
