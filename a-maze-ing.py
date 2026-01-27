@@ -160,6 +160,8 @@ def main() -> None:
             print(f"Config invalid values: {e}", file=sys.stderr)
         except FileNotFoundError as e:
             print(f"{e}", file=sys.stderr)
+        except Exception as e:
+            print(f"{e}", file=sys.stderr)
 
 
 if __name__ == "__main__":

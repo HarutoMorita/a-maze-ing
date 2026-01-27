@@ -56,6 +56,10 @@ class Config:
                     self._data_str[key.strip().upper()] = value.strip()
         except FileNotFoundError:
             raise FileNotFoundError(f"Config file not found: {self.path}")
+        except PermissionError:
+            raise PermissionError(f"Config not allowed to open: {self.path}")
+        except Exception:
+            raise Exception("Unknown Error")
 
     def _parse(self) -> None:
         """Parses raw strings into specific data types and validates them.
