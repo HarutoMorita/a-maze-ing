@@ -1,122 +1,8 @@
 #!/usr/bin/env python3
 import random
 import sys
-
-
-class Cell:
-    """
-    A single maze cell.
-
-    Each cell is encoded into a hex digit based on its walls.
-    Bit 0 for North wall, bit 1 for East, bit 2 for South, bit 3 for West.
-    For example, 9 represents a cell with walls on North(1) and West(8)
-
-
-    Attributes:
-        value (int): The hex value representing each wall's status.
-        is_entry (bool): If the cell is entry.
-        is_exit (bool): If the cell is exit.
-        is_pattern (bool): If the cell is the part of pattern.
-        is_path (bool): If the cell is the part of path.
-    """
-    WALL_BITS = {'N': 1 << 0, 'E': 1 << 1, 'S': 1 << 2, 'W': 1 << 3}
-
-    value: int
-    is_entry: bool
-    is_exit: bool
-    is_pattern: bool
-    is_path: bool
-
-    def __init__(self):
-        self.value = 0xF
-        self.is_entry = False
-        self.is_exit = False
-        self.is_pattern = False
-        self.is_path = False
-
-    def remove_wall(self, direction: str) -> None:
-        if direction in self.WALL_BITS:
-            self.value &= ~self.WALL_BITS[direction]
-
-
-class Maze:
-    """
-    A rectangular maze grid.
-
-
-    Attributes:
-        width (int): Width of the maze in number of cells.
-        height (int): Height of the maze in number of cells.
-        entry (tuple[int, int]): Entry cell coordinates (row, col).
-        exit (tuple[int, int]): Exit cell coordinates (row, col).
-        grid (list[list[Cell]]): 2D grid of maze cells.
-    """
-    width: int
-    height: int
-    entry: tuple[int, int]
-    exit_: tuple[int, int]
-    grid: list[list[Cell]]
-
-    def __init__(
-        self, width: int, height: int,
-        entry: tuple[int, int], exit_: tuple[int, int]
-    ):
-        self.width = width
-        self.height = height
-        self.entry = entry
-        self.exit_ = exit_
-        self.grid = [[Cell() for _ in range(width)] for _ in range(height)]
-        self.get_cell(entry).is_entry = True
-        self.get_cell(exit_).is_exit = True
-
-    def get_cell(self, pos: tuple[int, int]) -> Cell:
-        """Return the cell at the given position.
-
-        Args:
-            pos (tuple[int, int]): Cell position(row, col).
-
-        Returns:
-            Cell: The cell located at the passed position.
-        """
-        x, y = pos
-        return self.grid[y][x]
-
-    def open_wall(self, pos1: tuple[int, int], pos2: tuple[int, int]) -> None:
-        """Open the wall between two adjacent cells.
-
-        The wall is opened only if the two positions are
-        vertically or horizontally adjacent.
-        If the cells are not adjacent, nothing happens.
-
-        Args:
-            pos1 (tuple[int, int]): Position of the first cell(row, col).
-            pos2 (tuple[int, int]): Position of the second cell(row, col).
-        """
-        x1, y1 = pos1
-        x2, y2 = pos2
-        if abs(x1 - x2) + abs(y1 - y2) != 1:
-            return
-        cell1 = self.get_cell(pos1)
-        cell2 = self.get_cell(pos2)
-
-        if y1 > y2:
-            cell1.remove_wall('N')
-            cell2.remove_wall('S')
-        elif x1 < x2:
-            cell1.remove_wall('E')
-            cell2.remove_wall('W')
-        elif y1 < y2:
-            cell1.remove_wall('S')
-            cell2.remove_wall('N')
-        elif x1 > x2:
-            cell1.remove_wall('W')
-            cell2.remove_wall('E')
-
-    def __str__(self) -> str:
-        return "\n".join(
-            "".join(format(c.value, 'x') for c in row)
-            for row in self.grid
-        )
+from .maze import Cell, Maze
+from typing import Iterator
 
 
 class MazeGenerator:
@@ -134,6 +20,7 @@ class MazeGenerator:
         _seed (int | None): Random seed for maze generation.
         _grid (Maze): Generated maze structure.
     """
+
     _width: int
     _height: int
     _entry: tuple[int, int]
@@ -146,10 +33,14 @@ class MazeGenerator:
     _is_re: bool
 
     def __init__(
-        self, width: int, height: int,
-        entry: tuple[int, int], exit_: tuple[int, int],
-        perfect: bool = True, seed: int | None = None,
-        algo: str | None = None
+        self,
+        width: int,
+        height: int,
+        entry: tuple[int, int],
+        exit_: tuple[int, int],
+        perfect: bool = True,
+        seed: int | None = None,
+        algo: str | None = None,
     ):
         self._width = width
         self._height = height
@@ -160,6 +51,57 @@ class MazeGenerator:
         self._seed = random.Random(seed)
         self._algo = algo
         self._is_re = False
+        self.dirs = [(0, -1), (0, 1), (1, 0), (-1, 0)]
+        self.wall_bit = [(1, 4), (4, 1), (2, 8), (8, 2)]  # N, S, E, W
+        self.dir_names = ["N", "S", "E", "W"]
+        self.re_render = 0
+        self.display_path = 0
+        self._grid: Maze = Maze(width, height, entry, exit_)
+
+    @property
+    def maze(self) -> Maze:
+        return self._grid
+
+    def generate(self):
+        self._grid = Maze(self._width, self._height, self._entry, self._exit)
+        self._pattern = self._make_pattern()
+        if self._initial_seed is not None:
+            self._seed = random.Random(self._initial_seed)
+
+        if self._algo == "DFS":
+            yield from self.generate_dfs_step()
+        elif self._algo == "PRIM":
+            yield from self.generate_prim_step()
+
+    def generate_dfs_step(self) -> Iterator[None]:
+        dirs: list[tuple[int, int]] = [(0, -1), (0, 1), (1, 0), (-1, 0)]
+        stack: list[tuple[int, int]] = [self._entry]
+        visited: set[tuple[int, int]] = {self._entry}
+
+        while stack:
+            x, y = stack[-1]
+            neighbors: list[int] = []
+
+            for i, (dx, dy) in enumerate(dirs):
+                nx, ny = x + dx, y + dy
+                if (0 <= nx < self._width and 0 <= ny < self._height and
+                        (nx, ny) not in self._pattern and
+                        (nx, ny) not in visited):
+                    neighbors.append(i)
+
+            if neighbors:
+                idx: int = self._seed.choice(neighbors)
+                dx, dy = dirs[idx]
+                nx, ny = x + dx, y + dy
+                self._open_wall((x, y), (nx, ny))
+
+                visited.add((nx, ny))
+                stack.append((nx, ny))
+
+                yield None
+            else:
+                stack.pop()
+                yield None
 
     def _make_pattern(self) -> set[tuple[int, int]]:
         """Return coordinates forming a '42' pattern.
@@ -170,7 +112,7 @@ class MazeGenerator:
         Returns:
             set[tuple[int, int]]: Set of (row, col) positions for pattern.
         """
-        pattern = [
+        pattern: list[list[int]] = [
             [1, 0, 0, 0, 1, 1, 1],
             [1, 0, 0, 0, 0, 0, 1],
             [1, 1, 1, 0, 1, 1, 1],
@@ -182,10 +124,12 @@ class MazeGenerator:
         pat_width = len(pattern[0])
 
         if self._height < pat_height + 1 or self._width < pat_width + 2:
-            print(f"Error: the '42' pattern is omitted "
-                  f"because the {self._width}x{self._height} maze is "
-                  f"too small to have it",
-                  file=sys.stderr)
+            print(
+                f"Error: the '42' pattern is omitted "
+                f"because the {self._width}x{self._height} maze is "
+                f"too small to have it",
+                file=sys.stderr,
+            )
             return set()
 
         offset_y = (self._height - pat_height) // 2
@@ -198,46 +142,66 @@ class MazeGenerator:
                 if pattern[py][px]:
                     pattern_pos.add((offset_x + px, offset_y + py))
         if self._entry in pattern_pos:
-            print(f"Error: the '42' pattern is omitted "
-                  f"because it covers the entry position {self._entry}",
-                  file=sys.stderr)
+            print(
+                f"Error: the '42' pattern is omitted "
+                f"because it covers the entry position {self._entry}",
+                file=sys.stderr,
+            )
             return set()
         if self._exit in pattern_pos:
-            print(f"Error: the '42' pattern is omitted "
-                  f"because it covers the exit position {self._exit}",
-                  file=sys.stderr)
+            print(
+                f"Error: the '42' pattern is omitted "
+                f"because it covers the exit position {self._exit}",
+                file=sys.stderr,
+            )
             return set()
 
-        for pos in pattern_pos:
-            self._grid.get_cell(pos).is_pattern = True
+        for x, y in pattern_pos:
+            self._grid[y][x].is_pattern = True
 
         return pattern_pos
 
-    def generate(self):
-        if self._algo == "dfs":
-            self.generate_dfs()
-        elif self._algo == "prim":
-            self.generate_prim()
+    def _open_wall(self, pos1: tuple[int, int], pos2: tuple[int, int]) -> None:
+        """Open the wall between two adjacent cells.
 
-    def generate_prim(self) -> Maze:
+        The wall is opened only if the two positions are
+        vertically or horizontally adjacent.
+        If the cells are not adjacent, nothing happens.
+
+        Args:
+            pos1 (tuple[int, int]): Position of the first cell(row, col).
+            pos2 (tuple[int, int]): Position of the second cell(row, col).
+        """
+        x1, y1 = pos1
+        x2, y2 = pos2
+        if abs(x1 - x2) + abs(y1 - y2) != 1:
+            return
+        cell1: Cell = self._grid[y1][x1]
+        cell2: Cell = self._grid[y2][x2]
+
+        if y1 > y2:
+            cell1.remove_wall("N")
+            cell2.remove_wall("S")
+        elif x1 < x2:
+            cell1.remove_wall("E")
+            cell2.remove_wall("W")
+        elif y1 < y2:
+            cell1.remove_wall("S")
+            cell2.remove_wall("N")
+        elif x1 > x2:
+            cell1.remove_wall("W")
+            cell2.remove_wall("E")
+
+    def generate_prim_step(self) -> Iterator[None]:
         """Generates a maze using Prim's algorithm.
 
         Returns:
             Maze: The generated maze object.
         """
-        self._grid = Maze(self._width, self._height, self._entry, self._exit)
-        self._pattern = self._make_pattern()
-        if self._initial_seed is not None:
-            self._seed = random.Random(self._initial_seed)
-        else:
-            pass
-
-        visited: set[tuple[int, int]] = set()
+        visited: set[tuple[int, int]] = {self._entry}
         options: list[tuple[int, int]] = []
 
-        start = self._entry
-        visited.add(start)
-        self._add_options(start, visited, options)
+        self._add_options(self._entry, visited, options)
 
         while options:
             current = self._seed.choice(options)
@@ -250,13 +214,16 @@ class MazeGenerator:
                 continue
 
             neighbor = self._seed.choice(neighbors)
-            self._grid.open_wall(current, neighbor)
+            self._open_wall(current, neighbor)
 
             visited.add(current)
             self._add_options(current, visited, options)
 
+            yield None
+
         if not self._perfect:
             self._add_loops()
+            yield None
 
         return self._grid
 
@@ -292,13 +259,12 @@ class MazeGenerator:
             list[tuple[int, int]]: List of visited neighbor coordinates.
         """
         return [
-            pos_nei for pos_nei in self._get_neighbors(pos)
+            pos_nei
+            for pos_nei in self._get_neighbors(pos)
             if pos_nei in visited and pos_nei not in self._pattern
         ]
 
-    def _get_neighbors(
-        self, pos: tuple[int, int]
-    ) -> list[tuple[int, int]]:
+    def _get_neighbors(self, pos: tuple[int, int]) -> list[tuple[int, int]]:
         """Finds all valid adjacent cells within the maze boundaries.
 
         Args:
@@ -309,8 +275,10 @@ class MazeGenerator:
         """
         x, y = pos
         neighbors = [
-            (x, y - 1), (x, y + 1),
-            (x - 1, y), (x + 1, y),
+            (x, y - 1),
+            (x, y + 1),
+            (x - 1, y),
+            (x + 1, y),
         ]
         return [
             (nx, ny)
@@ -332,7 +300,7 @@ class MazeGenerator:
                     adjacent_pairs.append(((x, y), (x + 1, y)))
 
         self._seed.shuffle(adjacent_pairs)
-        limit = (self._width * self._height) // 20
+        limit = (self._width * self._height) // 80
         broken = 0
 
         for pos1, pos2 in adjacent_pairs:
@@ -342,7 +310,7 @@ class MazeGenerator:
                 continue
             if self._is_closed(pos1, pos2):
                 if self._is_breakable(pos1, pos2):
-                    self._grid.open_wall(pos1, pos2)
+                    self._open_wall(pos1, pos2)
                     broken += 1
 
     def _is_closed(self, pos1: tuple[int, int], pos2: tuple[int, int]) -> bool:
@@ -357,8 +325,8 @@ class MazeGenerator:
         """
         x1, y1 = pos1
         x2, y2 = pos2
-        cell1: Cell = self._grid.get_cell(pos1)
-        cell2: Cell = self._grid.get_cell(pos2)
+        cell1: Cell = self._grid[y1][x1]
+        cell2: Cell = self._grid[y2][x2]
         if y1 < y2:
             return bool(cell1.value & (1 << 2))
         if y1 > y2:
@@ -379,9 +347,9 @@ class MazeGenerator:
         Returns:
             bool: True if three or more walls are already open in the 2x2 area.
         """
-        left_top = self._grid.get_cell((x, y))
-        right_top = self._grid.get_cell((x + 1, y))
-        left_bot = self._grid.get_cell((x, y + 1))
+        left_top: Cell = self._grid[y][x]
+        right_top: Cell = self._grid[y][x + 1]
+        left_bot: Cell = self._grid[y + 1][x]
         counter = 0
         if not (left_top.value & (1 << 1)):
             counter += 1
@@ -393,9 +361,8 @@ class MazeGenerator:
             counter += 1
         return counter >= 3
 
-    def _is_breakable(
-            self, pos1: tuple[int, int], pos2: tuple[int, int]
-    ) -> bool:
+    def _is_breakable(self,
+                      pos1: tuple[int, int], pos2: tuple[int, int]) -> bool:
         """Checks if a wall can be broken without creating 2x2 area.
 
         Args:
