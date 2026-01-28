@@ -1,9 +1,9 @@
 from collections import deque as deq
-from typing import Any
+from .maze import Maze
 
 
 class MazeSolver:
-    def __init__(self, maze: Any) -> None:
+    def __init__(self, maze: Maze) -> None:
         self._maze = maze
         self._dirs = [(0, -1), (0, 1), (1, 0), (-1, 0)]
         self._dir_names = ["N", "S", "E", "W"]

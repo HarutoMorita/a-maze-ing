@@ -1,3 +1,6 @@
+from typing import Iterator
+
+
 class Cell:
     """
     A single maze cell.
@@ -23,7 +26,7 @@ class Cell:
     is_pattern: bool
     path_status: int
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.value = 0xF
         self.is_entry = False
         self.is_exit = False
@@ -72,7 +75,7 @@ class Maze:
         self.get_cell(entry).is_entry = True
         self.get_cell(exit_).is_exit = True
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[list[Cell]]:
         return iter(self.grid)
 
     def get_cell(self, pos: tuple[int, int]) -> Cell:
@@ -87,12 +90,12 @@ class Maze:
         x, y = pos
         return self.grid[y][x]
 
-    def __getitem__(self, y):
+    def __getitem__(self, y: int) -> list[Cell]:
         return self.grid[y]
 
     def __str__(self) -> str:
         return "\n".join(
-            "".join(format(c.value, "x") for c in row) for row in self.grid
+            "".join(format(c.value, "X") for c in row) for row in self.grid
         )
 
     def clear_all_paths(self) -> None:

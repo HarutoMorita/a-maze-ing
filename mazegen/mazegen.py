@@ -62,7 +62,7 @@ class MazeGenerator:
     def maze(self) -> Maze:
         return self._grid
 
-    def generate(self):
+    def generate(self) -> Iterator[None]:
         self._grid = Maze(self._width, self._height, self._entry, self._exit)
         self._pattern = self._make_pattern()
         if self._initial_seed is not None:
@@ -224,8 +224,6 @@ class MazeGenerator:
         if not self._perfect:
             self._add_loops()
             yield None
-
-        return self._grid
 
     def _add_options(
         self,
