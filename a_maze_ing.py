@@ -127,6 +127,7 @@ class MazeApp:
     def _setup(self, animate: bool = False) -> None:
         """Initializes a new maze generation and window based on config."""
         self.show_p = False
+        self.cfg.seed = None
         self.cfg.load_config()
 
         if hasattr(self, 'display') and self.display.w_ptr:
