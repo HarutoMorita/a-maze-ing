@@ -21,7 +21,7 @@ clean:
 
 lint:
 	python3 -m flake8 . --exclude=.venv
-	python3 -m mypy . --exclude "(.venv|build)" \
+	python3 -m mypy . --exclude "(.venv|build|DFS_amazing)" \
 			--warn-return-any \
 			--warn-unused-ignores \
 			--ignore-missing-imports \

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 import random
 import sys
 from .maze import Cell, Maze
@@ -50,28 +49,34 @@ class MazeGenerator:
         self._initial_seed = seed
         self._seed = random.Random(seed)
         self._algo = algo
-        self._is_re = False
         self.dirs = [(0, -1), (0, 1), (1, 0), (-1, 0)]
-        self.wall_bit = [(1, 4), (4, 1), (2, 8), (8, 2)]  # N, S, E, W
-        self.dir_names = ["N", "S", "E", "W"]
-        self.re_render = 0
-        self.display_path = 0
         self._grid: Maze = Maze(width, height, entry, exit_)
 
     @property
     def maze(self) -> Maze:
         return self._grid
 
-    def generate(self) -> Iterator[None]:
+    def generate(self, animate: bool = False) -> Iterator[None] | None:
         self._grid = Maze(self._width, self._height, self._entry, self._exit)
         self._pattern = self._make_pattern()
         if self._initial_seed is not None:
             self._seed = random.Random(self._initial_seed)
 
-        if self._algo == "DFS":
-            yield from self.generate_dfs_step()
-        elif self._algo == "PRIM":
-            yield from self.generate_prim_step()
+        def generation_iter() -> Iterator[None]:
+            if self._algo == "DFS":
+                yield from self.generate_dfs_step()
+            else:
+                yield from self.generate_prim_step()
+
+            if not self._perfect:
+                yield from self._add_loops_step()
+        gen = generation_iter()
+        if animate:
+            return gen
+        else:
+            for _ in gen:
+                pass
+            return None
 
     def generate_dfs_step(self) -> Iterator[None]:
         dirs: list[tuple[int, int]] = [(0, -1), (0, 1), (1, 0), (-1, 0)]
@@ -222,7 +227,7 @@ class MazeGenerator:
             yield None
 
         if not self._perfect:
-            self._add_loops()
+            self._add_loops_step()
             yield None
 
     def _add_options(
@@ -284,7 +289,7 @@ class MazeGenerator:
             if 0 <= nx < self._width and 0 <= ny < self._height
         ]
 
-    def _add_loops(self) -> None:
+    def _add_loops_step(self) -> Iterator[None]:
         """Adds loops to make the maze imperfect.
 
         It opens some walls without creating 2x2 area.
@@ -298,7 +303,7 @@ class MazeGenerator:
                     adjacent_pairs.append(((x, y), (x + 1, y)))
 
         self._seed.shuffle(adjacent_pairs)
-        limit = (self._width * self._height) // 80
+        limit = (self._width * self._height) // 10
         broken = 0
 
         for pos1, pos2 in adjacent_pairs:
@@ -310,6 +315,7 @@ class MazeGenerator:
                 if self._is_breakable(pos1, pos2):
                     self._open_wall(pos1, pos2)
                     broken += 1
+                    yield None
 
     def _is_closed(self, pos1: tuple[int, int], pos2: tuple[int, int]) -> bool:
         """Checks if a wall exists between two adjacent cells.
@@ -373,15 +379,17 @@ class MazeGenerator:
 
         x1, y1 = pos1
         x2, y2 = pos2
-        if y1 < y2:
-            if x1 > 0 and self._check_2x2(x1 - 1, y1):
+        if x1 == x2:
+            top_y = min(y1, y2)
+            if x1 > 0 and self._check_2x2(x1 - 1, top_y):
                 return False
-            if x1 < self._width - 1 and self._check_2x2(x1, y1):
+            if x1 < self._width - 1 and self._check_2x2(x1, top_y):
                 return False
-        else:
-            if y1 > 0 and self._check_2x2(x1, y1 - 1):
+        elif y1 == y2:
+            left_x = min(x1, x2)
+            if y1 > 0 and self._check_2x2(left_x, y1 - 1):
                 return False
-            if y1 < self._height - 1 and self._check_2x2(x1, y1):
+            if y1 < self._height - 1 and self._check_2x2(left_x, y1):
                 return False
 
         return True

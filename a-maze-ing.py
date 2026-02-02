@@ -1,125 +1,253 @@
-#!/usr/bin/env python3
 import sys
-import time
+from mlx import Mlx
 from config import Config, InvalidFormat
-from mazegen import MazeGenerator, MazeSolver, Maze
-from rendering import Renderer
+from mazegen import MazeGenerator, MazeSolver, Maze, Cell
+from typing import Iterator
 
 
-def save_maze(config: Config, maze: Maze) -> None:
-    solver = MazeSolver(maze)
-    paths: list[list[str]] = solver.solve(count=1)
-    path_str: str = "".join(paths[0]) if paths else ""
-    try:
-        with open(config.output_file, 'w', encoding='utf-8') as f:
+class MlxMazeDisplay:
+    """Handles only the visual rendering of the maze using MLX."""
 
-            f.write(f"{maze}\n\n")
-            f.write(f"{config.entry[0]} {config.entry[1]}\n")
-            f.write(f"{config.exit[0]} {config.exit[1]}\n")
-            f.write(f"{path_str}\n")
-    except Exception as e:
-        print(f"Save failed: {e}", file=sys.stderr)
+    mlx: Mlx
+    m_ptr: int
+    c_size: int
+    w_ptr: int
+    palettes: list[int]
+    pal_idx: int
+    colors: dict[str, int]
+
+    def __init__(
+        self, mlx: Mlx, m_ptr: int, width: int, height: int, title: str
+    ) -> None:
+        self.mlx = mlx
+        self.m_ptr = m_ptr
+        self.c_size = 40
+
+        self.w_ptr = self.mlx.mlx_new_window(
+            m_ptr, width * self.c_size + 1,
+            height * self.c_size + 1,
+            title
+        )
+        self.palettes = [0xFFFFFFFF, 0xFF858585, 0xFFFFD200]
+        self.pal_idx = 0
+        self.colors = {
+            "WALL": self.palettes[self.pal_idx], "BG": 0xFF000000,
+            "ENT": 0xFFFF00FF, "EXT": 0xFFFF0000, "PAT": 0xFF1E90FF,
+            "P1": 0xFF00FF00, "P2": 0xFFFF8C00,
+        }
+
+    def render(self, maze: Maze) -> None:
+        """Draws the entire maze structure and state to the window."""
+
+        self.mlx.mlx_clear_window(self.m_ptr, self.w_ptr)
+        for y in range(maze.height):
+            for x in range(maze.width):
+                self._draw_cell(x, y, maze[y][x])
+
+    def rotate_colors(self) -> None:
+        """Cycles through the wall color palette."""
+        self.pal_idx = (self.pal_idx + 1) % len(self.palettes)
+        self.colors["WALL"] = self.palettes[self.pal_idx]
+
+    def _draw_cell(self, x: int, y: int, cell: Cell) -> None:
+        """Draws a single maze cell and its four potential walls."""
+        x0, y0 = x * self.c_size, y * self.c_size
+        color: int = self.colors["BG"]
+        if cell.is_entry:
+            color = self.colors["ENT"]
+        elif cell.is_exit:
+            color = self.colors["EXT"]
+        elif cell.is_pattern:
+            color = self.colors["PAT"]
+        elif cell.value & 32:
+            color = self.colors["P1"]
+        elif cell.value & 64:
+            color = self.colors["P2"]
+
+        for i in range(1, self.c_size):
+            for j in range(1, self.c_size):
+                self.mlx.mlx_pixel_put(
+                    self.m_ptr, self.w_ptr, x0 + i, y0 + j, color
+                )
+
+        c_wall: int = self.colors["WALL"]
+        if cell.value & 1:
+            for i in range(self.c_size + 1):
+                self.mlx.mlx_pixel_put(
+                    self.m_ptr, self.w_ptr, x0 + i, y0, c_wall)
+        if cell.value & 2:
+            for i in range(self.c_size + 1):
+                self.mlx.mlx_pixel_put(
+                    self.m_ptr, self.w_ptr, x0 + self.c_size, y0 + i, c_wall)
+        if cell.value & 4:
+            for i in range(self.c_size + 1):
+                self.mlx.mlx_pixel_put(
+                    self.m_ptr, self.w_ptr, x0 + i, y0 + self.c_size, c_wall)
+        if cell.value & 8:
+            for i in range(self.c_size + 1):
+                self.mlx.mlx_pixel_put(
+                    self.m_ptr, self.w_ptr, x0, y0 + i, c_wall)
 
 
-def choice_prompt() -> int | None:
-    print("=== A-Maze-ing ===")
-    print("1. Re-generate a new maze")
-    print("2. Show/Hide path from entry to exit")
-    print("3. Rotate maze colors")
-    print("4. Re-generate a new maze with animation.")
-    print("5. Quit")
-    line = input("Choice? (1-5): ")
-    if not line:
-        return None
-    try:
-        return int(line)
-    except ValueError:
-        raise ValueError("Invalid input. Please enter a number.\n")
+class MazeApp:
+    """Main controller managing data, logic, and rendering coordination."""
 
+    cfg: Config
+    mlx: Mlx
+    m_ptr: int
+    maze: Maze
+    anim_it: Iterator | None
+    show_p: bool
+    display: MlxMazeDisplay
 
-def run_terminal(setting: Config, mazegen: MazeGenerator) -> None:
-    renderer = Renderer()
-    invert_color: bool = False
-    show_path: bool = False
-    gen_iter = mazegen.generate()
-    list(gen_iter)
-    save_maze(setting, mazegen.maze)
-    renderer.display(mazegen.maze, invert=invert_color)
-    while True:
-        try:
-            choice = choice_prompt()
-        except ValueError as e:
-            print(e)
-            continue
+    def __init__(self, config: Config) -> None:
+        self.cfg = config
+        self.mlx = Mlx()
+        self.m_ptr = self.mlx.mlx_init()
+        self.anim_it = None
+        self.show_p = False
+        self._print_guide()
+        self._setup(animate=False)
 
-        if choice is None:
-            continue
-        if not (1 <= choice <= 5):
-            print("Please input a number between 1 and 5.\n")
-            continue
+    def _print_guide(self) -> None:
+        """Prints a clean, formatted guide to the terminal."""
+        print("----- Click window, then press following keys -----")
+        print("1: Regenerate a new maze.")
+        print("2: Show/Hide path from entry to exit.")
+        print("3: Change wall color.")
+        print("4: Regenerate a new maze with animation.")
+        print("Esc: Exit immediately.\n")
+
+    def _str_maze_info(self) -> str:
+        perf_str = "Perfect" if self.cfg.perfect else "Not-perfect"
+        algo_str = "DFS" if self.cfg.algo == "DFS" else "Prim"
+        return (f"{self.cfg.width}x{self.cfg.height} "
+                f"{perf_str} {algo_str}")
+
+    def _setup(self, animate: bool = False) -> None:
+        """Initializes a new maze generation and window based on config."""
+        self.show_p = False
+        self.cfg.load_config()
+
+        if self.display and self.display.w_ptr:
+            self.mlx.mlx_destroy_window(self.m_ptr, self.display.w_ptr)
+
+        gen = MazeGenerator(
+            self.cfg.width, self.cfg.height, self.cfg.entry, self.cfg.exit,
+            self.cfg.perfect, self.cfg.seed, self.cfg.algo
+        )
+        maze_data = self._str_maze_info()
+        if animate:
+            self.anim_it = gen.generate(animate=True)
         else:
-            if choice in [1, 4]:
-                show_path = False
-                gen_iter = mazegen.generate()
-                if choice == 1:
-                    list(gen_iter)
-                    renderer.display(mazegen.maze, invert=invert_color)
-                else:
-                    for _ in gen_iter:
-                        print("\033[H\033[2J", end="")
-                        renderer.display(mazegen.maze, invert=invert_color)
-                        time.sleep(0.02)
-            save_maze(setting, mazegen.maze)
-            if choice == 2:
-                show_path = not show_path
-                if show_path:
-                    solver = MazeSolver(mazegen.maze)
-                    path_count: int = 1 if setting.perfect else 2
-                    paths = solver.solve(count=path_count)
+            gen.generate(animate=False)
+            self.anim_it = None
+            self._save_maze(gen.maze)
+            print(f"Generated: {maze_data} Maze")
+        self.maze = gen.maze
+
+        self.display = MlxMazeDisplay(
+            self.mlx, self.m_ptr, self.maze.width, self.maze.height,
+            maze_data
+        )
+        self.mlx.mlx_key_hook(
+            self.display.w_ptr, self._key_handler, None
+        )
+
+    def _save_maze(self, maze_to_save: Maze) -> None:
+        """Saves current maze data and solution path to the output file."""
+        solver = MazeSolver(maze_to_save)
+        paths = solver.solve(count=1)
+        path_str = "".join(paths[0]) if paths else ""
+        try:
+            with open(self.cfg.output_file, 'w', encoding='utf-8') as f:
+                f.write(f"{maze_to_save}\n\n")
+                f.write(f"{self.cfg.entry[0]} {self.cfg.entry[1]}\n")
+                f.write(f"{self.cfg.exit[0]} {self.cfg.exit[1]}\n")
+                f.write(f"{path_str}\n")
+        except (PermissionError, OSError) as e:
+            print(f"File save error: {e}", file=sys.stderr)
+
+    def _key_handler(self, key: int, param: int) -> int:
+        """Processes keyboard input using standard instance method."""
+        try:
+            if key == 65307:
+                self.mlx.mlx_loop_exit(self.m_ptr)
+            elif key == ord('1'):
+                self._setup(animate=False)
+                self.display.render(self.maze)
+            elif key == ord('2'):
+                self.show_p = not self.show_p
+                if self.show_p:
+                    solver = MazeSolver(self.maze)
+                    cnt = 1 if self.cfg.perfect else 2
+                    paths = solver.solve(count=cnt)
                     bits = [32, 64]
                     for i, p in enumerate(paths):
                         if i < len(bits):
                             solver.apply_path_to_maze(p, bits[i])
                 else:
-                    for row in mazegen.maze:
-                        for cell in row:
-                            cell.value &= ~96
+                    self.maze.clear_all_paths()
+                self.display.render(self.maze)
+            elif key == ord('3'):
+                self.display.rotate_colors()
+                self.display.render(self.maze)
+            elif key == ord('4'):
+                self._setup(animate=True)
+        except (InvalidFormat, ValueError) as e:
+            print(f"Config error: {e}", file=sys.stderr)
+        except KeyboardInterrupt:
+            self.mlx.mlx_loop_exit(self.m_ptr)
+        except Exception as e:
+            print(f"Critical error: {e}", file=sys.stderr)
+        return 0
 
-                renderer.display(mazegen.maze, invert=invert_color)
-            if choice == 3:
-                invert_color = not invert_color
-                renderer.display(mazegen.maze, invert=invert_color)
-            if choice == 5:
-                break
+    def _loop_handler(self, param: int) -> int:
+        """Processes animation steps during MLX idle time."""
+        try:
+            if self.anim_it:
+                try:
+                    next(self.anim_it)
+                    self.display.render(self.maze)
+                except StopIteration:
+                    self.anim_it = None
+                    self._save_maze(self.maze)
+                    print(f"Generated: {self._str_maze_info()} Maze")
+        except KeyboardInterrupt:
+            self.mlx.mlx_loop_exit(self.m_ptr)
+        return 0
+
+    def run(self) -> None:
+        """Starts the MLX application loop."""
+        try:
+            self.mlx.mlx_loop_hook(
+                self.m_ptr, self._loop_handler, None)
+            self.display.render(self.maze)
+            self.mlx.mlx_loop(self.m_ptr)
+        except (KeyboardInterrupt, EOFError):
+            sys.exit(0)
 
 
 def main() -> None:
-    argc = len(sys.argv)
-    if argc == 1:
-        print("No config file provided. ", end="")
-        print("Usage: python3 a-maze-ing.py <config text file>")
+    """Entry point with robust error handling for various failure modes."""
+    if len(sys.argv) < 2:
+        print("Usage: python3 main.py <config_file>")
         sys.exit(1)
-    else:
-        try:
-            setting = Config(sys.argv[1])
-            mazegen = MazeGenerator(
-                setting.width, setting.height,
-                setting.entry, setting.exit, setting.perfect,
-                setting.seed, setting.algo)
-            run_terminal(setting, mazegen)
-
-        except (InvalidFormat, ValueError) as e:
-            print(f"Config error: {e}", file=sys.stderr)
-            sys.exit(1)
-        except (FileNotFoundError, PermissionError) as e:
-            print(f"File error: {e}", file=sys.stderr)
-            sys.exit(1)
-        except (KeyboardInterrupt, EOFError):
-            print("\nInterrupted by user")
-            sys.exit(0)
-        except Exception as e:
-            print(f"Fatal error: {e}")
-            sys.exit(1)
+    try:
+        setting = Config(sys.argv[1])
+        app = MazeApp(setting)
+        app.run()
+    except (InvalidFormat, ValueError) as e:
+        print(f"Config error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except (FileNotFoundError, PermissionError) as e:
+        print(f"File error: {e}", file=sys.stderr)
+        sys.exit(1)
+    except (KeyboardInterrupt, EOFError):
+        sys.exit(0)
+    except Exception as e:
+        print(f"Critical error: {e}", file=sys.stderr)
+        sys.exit(1)
 
 
 if __name__ == "__main__":

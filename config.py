@@ -32,6 +32,9 @@ class Config:
 
     def __init__(self, path: str) -> None:
         self.path = path
+        self.load_config()
+
+    def load_config(self) -> None:
         self._data_str = {}
         self._read_file()
         self._validate_required_keys()
@@ -58,8 +61,11 @@ class Config:
             raise FileNotFoundError(f"Config file not found: {self.path}")
         except PermissionError:
             raise PermissionError(f"Config not allowed to open: {self.path}")
-        except Exception:
-            raise Exception("Unknown Error")
+        except IsADirectoryError:
+            raise InvalidFormat(f"This program expected a file, "
+                                f"not a directory: {self.path}")
+        except Exception as e:
+            raise Exception(f"Unexpected error concerning file: {e}")
 
     def _parse(self) -> None:
         """Parses raw strings into specific data types and validates them.
@@ -122,7 +128,7 @@ class Config:
             raise InvalidFormat(f"{key} must be in format x,y")
 
         if not (0 <= x_val < self.width and 0 <= y_val < self.height):
-            raise InvalidFormat(f"{key} is out of maze bounds")
+            raise InvalidFormat(f"{key} is out of maze's bounds")
         return x_val, y_val
 
     def _parse_bool(self, key: str) -> bool:
@@ -177,6 +183,9 @@ class Config:
         value = self._data_str[key]
         if not value.endswith(".txt"):
             raise InvalidFormat("OUTPUT_FILE must end with .txt")
+        if value == self.path:
+            raise InvalidFormat(
+                "OUTPUT_FILE must be different from the config file")
         return value
 
     def _validate_required_keys(self) -> None:
