@@ -96,7 +96,7 @@ class MazeApp:
     mlx: Mlx
     m_ptr: int
     maze: Maze
-    anim_it: Iterator | None
+    anim_it: Iterator[None] | None
     show_p: bool
     display: MlxMazeDisplay
 
@@ -129,7 +129,7 @@ class MazeApp:
         self.show_p = False
         self.cfg.load_config()
 
-        if self.display and self.display.w_ptr:
+        if hasattr(self, 'display') and self.display.w_ptr:
             self.mlx.mlx_destroy_window(self.m_ptr, self.display.w_ptr)
 
         gen = MazeGenerator(
