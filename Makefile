@@ -1,37 +1,62 @@
-NAME = mazegen-1.0.0.whl
+
+MAIN_PROGRAM = a_maze_ing.py
+ARG_FILE = config.txt
 PACKAGE_NAME = mazegen
+
+VENV = .venv
+PYTHON_VER = python3
+PYTHON_EXEC = $(VENV)/bin/$(PYTHON_VER)
+PIP = $(VENV)/bin/pip
+MLX_WHL      = mlx-2.2-py3-none-any.whl
+REQUIREMENTS = requirements.txt
+
+MYPY_OPTION = --warn-return-any \
+				--warn-unused-ignores \
+				--ignore-missing-imports \
+				--disallow-untyped-defs \
+				--check-untyped-defs
 
 .PHONY: all install run debug clean lint lint-strict build
 
-all: lint build
+all: install lint
 
 install:
-	pip install .
-	pip install flake8 mypy build
+	$(PYTHON_VER) -m venv $(VENV)
+	$(PIP) install --upgrade pip
+	$(PIP) install ./mlx-2.2-py3-none-any.whl
+	$(PIP) install -r $(REQUIREMENTS)
+	$(PIP) install .
 
 run:
-	python3 a-maze-ing.py
+	$(PYTHON_EXEC) $(MAIN_PROGRAM) $(ARG_FILE)
 
 debug:
-	python3 -m pdb a-maze-ing.py
+	$(PYTHON_EXEC) -m pdb $(MAIN_PROGRAM) $(ARG_FILE)
 
 clean:
-	rm -rf __pycache__ .mypy_cache .pytest_cache dist build *.egg-info
-	rm -f $(NAME)
-
+	rm -rf __pycache__ \
+	.mypy_cache \
+	.pytest_cache \
+	dist build \
+	*.egg-info
+	rm -f mazegen-*.whl mazegen-*.tar.gz
 lint:
-	python3 -m flake8 . --exclude=.venv
-	python3 -m mypy . --exclude "(.venv|build|DFS_amazing)" \
-			--warn-return-any \
-			--warn-unused-ignores \
-			--ignore-missing-imports \
-			--disallow-untyped-defs \
-			--check-untyped-defs
+	$(PYTHON_EXEC) -m flake8 .
+	$(PYTHON_EXEC) -m mypy . $(MYPY_OPTION)
 
 lint-strict:
-	python3 -m flake8 . --exclude=.venv,build
-	python3 -m mypy . --exclude "(.venv|build)" --strict
+	$(PYTHON_EXEC) -m flake8 .
+	$(PYTHON_EXEC) -m mypy . --strict
 
 build: clean
-	python3 -m build
-	cp dist/*.whl ./$(NAME)
+	$(PYTHON_EXEC) -m build
+	cp dist/*.whl ./
+	cp dist/*.tar.gz ./
+
+test-pkg: build
+	rm -rf test_dir
+	mkdir test_dir
+	$(PYTHON_VER) -m venv test_dir/venv
+	test_dir/venv/bin/pip install dist/*.whl
+	cd test_dir && venv/bin/python3 -c "import mazegen; print('Package import test successful!')"
+	rm -rf test_dir
