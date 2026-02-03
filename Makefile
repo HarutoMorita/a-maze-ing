@@ -16,7 +16,7 @@ MYPY_OPTION = --warn-return-any \
 				--disallow-untyped-defs \
 				--check-untyped-defs
 
-.PHONY: all install run debug clean lint lint-strict build
+.PHONY: all install run debug clean fclean lint lint-strict build test-pkg
 
 all: install lint
 
@@ -34,12 +34,15 @@ debug:
 	$(PYTHON_EXEC) -m pdb $(MAIN_PROGRAM) $(ARG_FILE)
 
 clean:
-	rm -rf __pycache__ \
-	.mypy_cache \
-	.pytest_cache \
-	dist build \
-	*.egg-info
+	rm -rf .pytest_cache
+	find . -type d -name "__pycache__" -exec rm -rf {} +
+	find . -type d -name ".mypy_cache" -exec rm -rf {} +
+
+fclean: clean
+	rm -rf $(VENV)
+	rm -rf dist build *.egg-info
 	rm -f mazegen-*.whl mazegen-*.tar.gz
+
 lint:
 	$(PYTHON_EXEC) -m flake8 .
 	$(PYTHON_EXEC) -m mypy . $(MYPY_OPTION)
