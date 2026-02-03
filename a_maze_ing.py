@@ -5,8 +5,8 @@ try:
     from mlx import Mlx
     from mazegen import MazeGenerator, MazeSolver, Maze, Cell
 except ImportError as e:
-    print(f"Critical Error: Missing dependency -> {e.name}")
-    print("Do 'make/make install' first.")
+    print(f"Critical Error: Missing dependency -> {e.name}", file=sys.stderr)
+    print("Do 'make/make install' first.", file=sys.stderr)
     sys.exit(1)
 
 
