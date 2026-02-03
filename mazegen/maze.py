@@ -24,14 +24,12 @@ class Cell:
     is_entry: bool
     is_exit: bool
     is_pattern: bool
-    path_status: int
 
     def __init__(self) -> None:
         self.value = 0xF
         self.is_entry = False
         self.is_exit = False
         self.is_pattern = False
-        self.path_status = 0
 
     def remove_wall(self, direction: str) -> None:
         if direction in self.WALL_BITS:

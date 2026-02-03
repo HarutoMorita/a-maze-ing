@@ -1,8 +1,13 @@
 import sys
-from mlx import Mlx
-from config import Config, InvalidFormat
-from mazegen import MazeGenerator, MazeSolver, Maze, Cell
 from typing import Iterator
+from config import Config, InvalidFormat
+try:
+    from mlx import Mlx
+    from mazegen import MazeGenerator, MazeSolver, Maze, Cell
+except ImportError as e:
+    print(f"Critical Error: Missing dependency -> {e.name}")
+    print("Do 'make/make install' first.")
+    sys.exit(1)
 
 
 class MlxMazeDisplay:
@@ -28,12 +33,12 @@ class MlxMazeDisplay:
             height * self.c_size + 1,
             title
         )
-        self.palettes = [0xFFFFFFFF, 0xFF858585, 0xFFFFD200]
+        self.palettes = [0xFFFFFFFF, 0xFF00FFFF, 0xFFFFFF00]
         self.pal_idx = 0
         self.colors = {
             "WALL": self.palettes[self.pal_idx], "BG": 0xFF000000,
-            "ENT": 0xFFFF00FF, "EXT": 0xFFFF0000, "PAT": 0xFF1E90FF,
-            "P1": 0xFF00FF00, "P2": 0xFFFF8C00,
+            "ENT": 0xFFFF00FF, "EXT": 0xFFFF0000, "PAT": 0xFF104E8B,
+            "P1": 0xFF008000, "P2": 0xFFCC7000,
         }
 
     def render(self, maze: Maze) -> None:

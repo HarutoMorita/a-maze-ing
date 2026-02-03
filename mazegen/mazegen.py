@@ -29,7 +29,6 @@ class MazeGenerator:
     _grid: Maze
     _pattern: set[tuple[int, int]]
     _algo: str | None
-    _is_re: bool
 
     def __init__(
         self,
@@ -49,7 +48,6 @@ class MazeGenerator:
         self._initial_seed = seed
         self._seed = random.Random(seed)
         self._algo = algo
-        self.dirs = [(0, -1), (0, 1), (1, 0), (-1, 0)]
         self._grid: Maze = Maze(width, height, entry, exit_)
 
     @property
