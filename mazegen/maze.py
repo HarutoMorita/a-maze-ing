@@ -32,13 +32,16 @@ class Cell:
         self.is_pattern = False
 
     def remove_wall(self, direction: str) -> None:
+        """Removes the wall in the given direction."""
         if direction in self.WALL_BITS:
             self.value &= ~self.WALL_BITS[direction]
 
     def set_path(self, bit: int) -> None:
+        """Marks the cell as part of a path using the given bit."""
         self.value |= bit
 
     def clear_path(self) -> None:
+        """Clears any path markings from the cell."""
         self.value &= ~96
 
 
@@ -74,6 +77,7 @@ class Maze:
         self.get_cell(exit_).is_exit = True
 
     def __iter__(self) -> Iterator[list[Cell]]:
+        """Returns an iterator over the maze rows."""
         return iter(self.grid)
 
     def get_cell(self, pos: tuple[int, int]) -> Cell:
@@ -89,14 +93,17 @@ class Maze:
         return self.grid[y][x]
 
     def __getitem__(self, y: int) -> list[Cell]:
+        """Returns the row at the given y-coordinate."""
         return self.grid[y]
 
     def __str__(self) -> str:
+        """Returns a string representation of the maze."""
         return "\n".join(
             "".join(format(c.value, "X") for c in row) for row in self.grid
         )
 
     def clear_all_paths(self) -> None:
+        """Clears all path markings from the maze."""
         for row in self.grid:
             for cell in row:
                 cell.clear_path()

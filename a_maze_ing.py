@@ -236,7 +236,7 @@ class MazeApp:
 
 def main() -> None:
     """Entry point with robust error handling for various failure modes."""
-    if len(sys.argv) < 2:
+    if len(sys.argv) != 2:
         print("Usage: python3 main.py <config_file>")
         sys.exit(1)
     try:

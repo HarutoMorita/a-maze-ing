@@ -52,15 +52,23 @@ class MazeGenerator:
 
     @property
     def maze(self) -> Maze:
+        """
+        Returns the generated
+        maze
+        """
         return self._grid
 
     def generate(self, animate: bool = False) -> Iterator[None] | None:
+        """
+        generate maze using the specified algorithm.
+        """
         self._grid = Maze(self._width, self._height, self._entry, self._exit)
         self._pattern = self._make_pattern()
         if self._initial_seed is not None:
             self._seed = random.Random(self._initial_seed)
 
         def generation_iter() -> Iterator[None]:
+            """Generator function for maze generation steps."""
             if self._algo == "DFS":
                 yield from self.generate_dfs_step()
             else:
@@ -77,6 +85,7 @@ class MazeGenerator:
             return None
 
     def generate_dfs_step(self) -> Iterator[None]:
+        """Generates a maze using Depth-First Search algorithm."""
         dirs: list[tuple[int, int]] = [(0, -1), (0, 1), (1, 0), (-1, 0)]
         stack: list[tuple[int, int]] = [self._entry]
         visited: set[tuple[int, int]] = {self._entry}
