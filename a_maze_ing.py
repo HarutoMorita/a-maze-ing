@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 from typing import Iterator
 from config import Config, InvalidFormat
@@ -24,6 +25,7 @@ class MlxMazeDisplay:
     def __init__(
         self, mlx: Mlx, m_ptr: int, width: int, height: int, title: str
     ) -> None:
+        """Initializes the display window and color palettes."""
         self.mlx = mlx
         self.m_ptr = m_ptr
         self.c_size = 40
@@ -106,6 +108,7 @@ class MazeApp:
     display: MlxMazeDisplay
 
     def __init__(self, config: Config) -> None:
+        """Initializes the application with the given configuration."""
         self.cfg = config
         self.mlx = Mlx()
         self.m_ptr = self.mlx.mlx_init()
@@ -124,6 +127,7 @@ class MazeApp:
         print("Esc: Exit immediately.\n")
 
     def _str_maze_info(self) -> str:
+        """Returns a formatted string describing the current maze config."""
         perf_str = "Perfect" if self.cfg.perfect else "Not-perfect"
         algo_str = "DFS" if self.cfg.algo == "DFS" else "Prim"
         return (f"{self.cfg.width}x{self.cfg.height} "
@@ -174,6 +178,19 @@ class MazeApp:
         except (PermissionError, OSError) as e:
             print(f"File save error: {e}", file=sys.stderr)
 
+    def _toggle_path(self) -> None:
+        """Toggles the visibility of the solution path in the maze."""
+        self.show_p = not self.show_p
+        if self.show_p:
+            solver = MazeSolver(self.maze)
+            paths = solver.solve(count=(1 if self.cfg.perfect else 2))
+            bits = [32, 64]
+            for i, p in enumerate(paths):
+                if i < len(bits):
+                    solver.apply_path_to_maze(p, bits[i])
+        else:
+            self.maze.clear_all_paths()
+
     def _key_handler(self, key: int, param: int) -> int:
         """Processes keyboard input using standard instance method."""
         try:
@@ -183,17 +200,7 @@ class MazeApp:
                 self._setup(animate=False)
                 self.display.render(self.maze)
             elif key == ord('2'):
-                self.show_p = not self.show_p
-                if self.show_p:
-                    solver = MazeSolver(self.maze)
-                    cnt = 1 if self.cfg.perfect else 2
-                    paths = solver.solve(count=cnt)
-                    bits = [32, 64]
-                    for i, p in enumerate(paths):
-                        if i < len(bits):
-                            solver.apply_path_to_maze(p, bits[i])
-                else:
-                    self.maze.clear_all_paths()
+                self._toggle_path()
                 self.display.render(self.maze)
             elif key == ord('3'):
                 self.display.rotate_colors()

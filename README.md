@@ -1,5 +1,7 @@
 ## Instructions
 
+This project requires Python 3.10+ and a Linux environment as the MiniLibX binary is built for Linux.
+
 ### Installation
 Before running the program, you must set up the environment using `make` or `make install`.
 
@@ -54,8 +56,10 @@ Or you can manually execute the program with your own config file.
 
 ### Maintenance
 `make clean` deletes temporary files, Python artifacts, and caches.
+`make fclean`runs `make clean` and resets the project to its initial state.
 ```bash
 % make clean	# Remove temporary files and caches
+% make fclean	# Clean + remove venv, build artifacts, and caches
 ```
 - `make build` build the mazegen package with extension **.whl** and **.tar.gz** and place them at the root directory. \
 - `make test-pkg` Verify if the built package properly works as a package in a clean temporary environment.

@@ -9,15 +9,6 @@ class MazeGenerator:
 
     This class handles maze generation logic and produces a Maze instance
     based on given parameters.
-
-    Attributes:
-        _width (int): Width of the maze in number of cells.
-        _height (int): Height of the maze in number of cells.
-        _entry (tuple[int, int]): Entry cell position (row, col).
-        _exit (tuple[int, int]): Exit cell position (row, col).
-        _perfect (bool): Whether the generated maze is perfect.
-        _seed (int | None): Random seed for maze generation.
-        _grid (Maze): Generated maze structure.
     """
 
     _width: int
@@ -40,6 +31,17 @@ class MazeGenerator:
         seed: int | None = None,
         algo: str | None = None,
     ):
+        """Initializes the generator with parameters.
+
+        Args:
+            width: Maze width (number of columns).
+            height: Maze height (number of rows).
+            entry: Entry cell position as (col, row).
+            exit_: Exit cell position as (col, row).
+            perfect: If True, generates a maze with no loops.
+            seed: Optional seed for the random number generator.
+            algo: Name of the algorithm to be used.
+        """
         self._width = width
         self._height = height
         self._entry = entry
@@ -52,15 +54,20 @@ class MazeGenerator:
 
     @property
     def maze(self) -> Maze:
-        """
-        Returns the generated
-        maze
-        """
+        """Returns the generated maze"""
         return self._grid
 
     def generate(self, animate: bool = False) -> Iterator[None] | None:
         """
-        generate maze using the specified algorithm.
+        Generate maze using the specified algorithm.
+
+        Args:
+            animate: If True, returns an iterator that yields after each step
+                of the generation process. If False, runs the entire
+                generation until completion.
+
+        Returns:
+            An iterator of None if animate is True, otherwise None.
         """
         self._grid = Maze(self._width, self._height, self._entry, self._exit)
         self._pattern = self._make_pattern()
@@ -85,7 +92,11 @@ class MazeGenerator:
             return None
 
     def generate_dfs_step(self) -> Iterator[None]:
-        """Generates a maze using Depth-First Search algorithm."""
+        """Generates a maze using Depth-First Search algorithm.
+
+        Yields:
+            None after each step of maze generation.
+        """
         dirs: list[tuple[int, int]] = [(0, -1), (0, 1), (1, 0), (-1, 0)]
         stack: list[tuple[int, int]] = [self._entry]
         visited: set[tuple[int, int]] = {self._entry}
@@ -122,7 +133,7 @@ class MazeGenerator:
         and is centered inside the maze.
 
         Returns:
-            set[tuple[int, int]]: Set of (row, col) positions for pattern.
+            set: Set of (col, row) positions for pattern.
         """
         pattern: list[list[int]] = [
             [1, 0, 0, 0, 1, 1, 1],
@@ -181,8 +192,8 @@ class MazeGenerator:
         If the cells are not adjacent, nothing happens.
 
         Args:
-            pos1 (tuple[int, int]): Position of the first cell(row, col).
-            pos2 (tuple[int, int]): Position of the second cell(row, col).
+            pos1: Position of the first cell(col, row).
+            pos2: Position of the second cell(col, row).
         """
         x1, y1 = pos1
         x2, y2 = pos2
@@ -207,8 +218,8 @@ class MazeGenerator:
     def generate_prim_step(self) -> Iterator[None]:
         """Generates a maze using Prim's algorithm.
 
-        Returns:
-            Maze: The generated maze object.
+        Yields:
+            None after each step of maze generation.
         """
         visited: set[tuple[int, int]] = {self._entry}
         options: list[tuple[int, int]] = []
@@ -266,7 +277,7 @@ class MazeGenerator:
             visited: Set of visited cells.
 
         Returns:
-            list[tuple[int, int]]: List of visited neighbor coordinates.
+            List of visited neighbor coordinates.
         """
         return [
             pos_nei
@@ -281,7 +292,7 @@ class MazeGenerator:
             pos: Target cell coordinates.
 
         Returns:
-            list[tuple[int, int]]: List of valid neighbor coordinates.
+            List of valid neighbor coordinates.
         """
         x, y = pos
         neighbors = [
@@ -300,6 +311,9 @@ class MazeGenerator:
         """Adds loops to make the maze imperfect.
 
         It opens some walls without creating 2x2 area.
+
+        Yields:
+            None after each wall is broken.
         """
         adjacent_pairs = []
         for y in range(self._height):
@@ -332,7 +346,7 @@ class MazeGenerator:
             pos2: Second cell coordinates.
 
         Returns:
-            bool: True if the wall is closed, False otherwise.
+            True if the wall is closed, False otherwise.
         """
         x1, y1 = pos1
         x2, y2 = pos2
@@ -352,11 +366,11 @@ class MazeGenerator:
         """Checks if breaking a wall creates a 2x2 area.
 
         Args:
-            row: Top-left row index of the 2x2 area.
-            col: Top-left column index of the 2x2 area.
+            x: Top-left x-coordinate of the potential 2x2 area.
+            y: Top-left y-coordinate of the potential 2x2 area.
 
         Returns:
-            bool: True if three or more walls are already open in the 2x2 area.
+            True if three or more walls are already open in the 2x2 area.
         """
         left_top: Cell = self._grid[y][x]
         right_top: Cell = self._grid[y][x + 1]
@@ -381,7 +395,7 @@ class MazeGenerator:
             pos2: Second cell coordinates.
 
         Returns:
-            bool: True if breaking the wall is not making 2x2 area.
+            True if breaking the wall is not making 2x2 area.
         """
 
         x1, y1 = pos1

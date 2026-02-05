@@ -5,17 +5,19 @@ class Cell:
     """
     A single maze cell.
 
-    Each cell is encoded into a hex digit based on its walls.
-    Bit 0 for North wall, bit 1 for East, bit 2 for South, bit 3 for West.
-    For example, 9 represents a cell with walls on North(1) and West(8)
+    Each cell is encoded into a hex digit based on its walls:
+    Bit 0 (1): North wall
+    Bit 1 (2): East wall
+    Bit 2 (4): South wall
+    Bit 3 (8): West wall
+    For example, 9 (1001 in binary) represents walls on North and West.
 
 
     Attributes:
-        value (int): The hex value representing each wall's status.
-        is_entry (bool): If the cell is entry.
-        is_exit (bool): If the cell is exit.
-        is_pattern (bool): If the cell is the part of pattern.
-        is_path (bool): If the cell is the part of path.
+        value: The hex value representing each wall's status.
+        is_entry: If the cell is entry.
+        is_exit: If the cell is exit.
+        is_pattern: If the cell is the part of pattern.
     """
 
     WALL_BITS = {"N": 1 << 0, "E": 1 << 1, "S": 1 << 2, "W": 1 << 3}
@@ -26,6 +28,7 @@ class Cell:
     is_pattern: bool
 
     def __init__(self) -> None:
+        """Initializes a cell with all walls closed and no status."""
         self.value = 0xF
         self.is_entry = False
         self.is_exit = False
@@ -37,7 +40,11 @@ class Cell:
             self.value &= ~self.WALL_BITS[direction]
 
     def set_path(self, bit: int) -> None:
-        """Marks the cell as part of a path using the given bit."""
+        """Marks the cell as part of a path using the given bit.
+
+        Args:
+            bit: The bit flag to set for path marking.
+        """
         self.value |= bit
 
     def clear_path(self) -> None:
@@ -51,11 +58,11 @@ class Maze:
 
 
     Attributes:
-        width (int): Width of the maze in number of cells.
-        height (int): Height of the maze in number of cells.
-        entry (tuple[int, int]): Entry cell coordinates (row, col).
-        exit (tuple[int, int]): Exit cell coordinates (row, col).
-        grid (list[list[Cell]]): 2D grid of maze cells.
+        width: Width of the maze in number of cells.
+        height: Height of the maze in number of cells.
+        entry: Entry cell coordinates (row, col).
+        exit_ : Exit cell coordinates (row, col).
+        grid: 2D grid of maze cells.
     """
 
     width: int
@@ -65,9 +72,13 @@ class Maze:
     grid: list[list[Cell]]
 
     def __init__(
-        self, width: int, height: int,
-        entry: tuple[int, int], exit_: tuple[int, int]
-    ):
+        self,
+        width: int,
+        height: int,
+        entry: tuple[int, int],
+        exit_: tuple[int, int]
+    ) -> None:
+        """Initializes the maze with dimensions and entry/exit points."""
         self.width = width
         self.height = height
         self.entry = entry
@@ -81,14 +92,7 @@ class Maze:
         return iter(self.grid)
 
     def get_cell(self, pos: tuple[int, int]) -> Cell:
-        """Return the cell at the given position.
-
-        Args:
-            pos (tuple[int, int]): Cell position(row, col).
-
-        Returns:
-            Cell: The cell located at the passed position.
-        """
+        """Return the cell at the given position."""
         x, y = pos
         return self.grid[y][x]
 
