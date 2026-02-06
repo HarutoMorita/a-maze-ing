@@ -92,7 +92,8 @@ class Config:
             val_i = int(self._data_str[key])
         except ValueError:
             raise InvalidFormat(f"{key} must be an integer")
-
+        if val_i > 200:
+            raise InvalidFormat(f"{key} must be at most 200")
         if val_i <= 0:
             raise InvalidFormat(f"{key} must be positive")
         return val_i
