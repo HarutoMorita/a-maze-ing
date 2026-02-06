@@ -1,5 +1,5 @@
+*This project has been created as part of the 42 curriculum by hmorita, daogawa.*
 ## Instructions
-
 This project requires Python 3.10+ and a Linux environment as the MiniLibX binary is built for Linux.
 
 ### Installation
