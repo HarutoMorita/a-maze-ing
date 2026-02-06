@@ -53,6 +53,20 @@ Or you can manually execute the program with your own config file.
 ```bash
 % .venv/bin/python3 a_maze_ing.py your_config.txt
 ```
+Here is the config file format.
+Note: # can be used for comments.
+```bash
+WIDTH=20
+HEIGHT=15
+ENTRY=0,0
+EXIT=19,14
+OUTPUT_FILE=maze.txt
+PERFECT=True
+# Optional
+SEED=42
+ALGO=DFS
+```
+
 
 ### Maintenance
 `make clean` deletes temporary files, Python artifacts, and caches.
@@ -61,9 +75,39 @@ Or you can manually execute the program with your own config file.
 % make clean	# Remove temporary files and caches
 % make fclean	# Clean + remove venv, build artifacts, and caches
 ```
+
 - `make build` build the mazegen package with extension **.whl** and **.tar.gz** and place them at the root directory. \
 - `make test-pkg` Verify if the built package properly works as a package in a clean temporary environment.
 ```bash
 % make build		# Build the mazegen package
 % make test-pkg		# Verify the .whl installation
 ```
+
+## Implementation
+The mazegen module has two types of maze generation algorithm.
+
+### Algorithm
+
+The main(default) algorithm is Depth-First Search.
+
+The alternative algorithm is Prim's Algorithm. It is chosen over Kruskal's Algorithm because path expansion of the Prim's is easier to implement constraints to prevent 2x2 open areas. This algorithm expands the maze by randomly selecting an unvisited cell adjacent to the current path and connecting them. \
+Prim's Algorithm Workflow
+
+1. Add the starting point (entry) to the visited set and add its adjacent cells to the options list.
+
+2. Randomly pick a cell (current) from the options list.
+
+3. Among the neighbors of the selected cell, randomly choose one that is already visited and break the wall to connect them.
+
+4. Add the new cell to the visited and add its unvisited neighbors to the options list.
+
+5. Repeat the process until the options list is empty.
+
+### Reusability
+
+The mazegen directory is a standalone module that can be integrated into any Python project. As it is mentioned above, `make build` build a reusable package from the directory. Maze generation and solving logic, which the module is responsible for, are entirely separated from the MLX display code. You can reuse the mazegen package by installing the built .whl file.
+
+## Project Management
+### What each member has done for this project
+hmorita: Config file parse, Prim's maze generation, MiniLibX rendering, Makefile and setting files.
+daogawa: DFS maze generation, BFS path search, terminal rendering(aborted), docstring.
