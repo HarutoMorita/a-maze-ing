@@ -40,8 +40,19 @@ class MazeGenerator:
             exit_: Exit cell position as (col, row).
             perfect: If True, generates a maze with no loops.
             seed: Optional seed for the random number generator.
-            algo: Name of the algorithm to be used.
+            algo: Name of the algorithm to be used; DFS/PRIM.
         """
+        if width <= 0 or height <= 0:
+            raise ValueError("Width and height must be positive.")
+        if not (0 <= entry[0] < width and 0 <= entry[1] < height):
+            raise ValueError("Entry position is out of bounds.")
+        if not (0 <= exit_[0] < width and 0 <= exit_[1] < height):
+            raise ValueError("Exit position is out of bounds.")
+        if entry == exit_:
+            raise ValueError("Entry and Exit positions must be different.")
+        if algo:
+            if not (algo == "DFS" or algo == "PRIM"):
+                raise ValueError("DFS or PRIM algorithm are available")
         self._width = width
         self._height = height
         self._entry = entry
