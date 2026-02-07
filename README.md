@@ -1,4 +1,22 @@
 *This project has been created as part of the 42 curriculum by hmorita, daogawa.*
+
+## Description
+
+"A-Maze-ing" is a Python-based project focused on the algorithmic generation, solving, and visualization of mazes.
+
+The primary goal of this project is to generate random yet reproducible mazes based on a user-provided configuration file (config.txt). The generated maze is output as hexadecimal data representing wall placements, and can be visualized through both a terminal and a graphical interface.
+
+Key Features:
+
+1. Maze Generation: Generates mazes based on specific width and height settings. When the "Perfect" flag is enabled, the tool creates a "Perfect Maze" with exactly one path between the entrance and the exit. Additionally, the maze features a visually integrated "42" pattern.
+
+2. Solving & Visualization: Calculates the shortest path of the generated maze and presents it visually using ASCII art or the MiniLibX library.
+
+3. Code Reusability: The maze generation logic is implemented as a standalone class, designed as a Python package to be easily integrated into future projects.
+
+## Instructions
+This project requires Python 3.10+ and a Linux environment as the MiniLibX binary is built for Linux.
+
 ## Instructions
 This project requires Python 3.10+ and a Linux environment as the MiniLibX binary is built for Linux.
 
@@ -111,3 +129,32 @@ The mazegen directory is a standalone module that can be integrated into any Pyt
 ### What each member has done for this project
 hmorita: Config file parse, Prim's maze generation, MiniLibX rendering, Makefile and setting files.
 daogawa: DFS maze generation, BFS path search, terminal rendering(aborted), docstring.
+
+
+## Resources
+
+・Graph アルゴリズム入門：DFS/BFS などの探索アルゴリズム
+https://qiita.com/Tadataka_Takahashi/items/90efc2fc862d32200a45
+・【Pyxel】DFSを使ってランダムにダンジョンを生成する！
+https://qiita.com/Prosamo/items/40f3847240f473edb209
+
+42 Tokyoのプロジェクト報告書やREADMEに記載する「AI Usage（AI使用履歴）」として、適切で透明性の高い英語表現に翻訳しました。
+
+AI Usage
+In alignment with the project guidelines, AI tools (such as ChatGPT and GitHub Copilot) were utilized as supplementary aids for the following tasks. All AI-generated suggestions were thoroughly reviewed, verified, and understood before integration into the project.
+
+Conceptual Understanding and Algorithm Selection:
+
+Deepened understanding of the relationship between "Spanning Trees" in graph theory and maze generation.
+
+Conducted a comparative analysis of the strengths and weaknesses of various algorithms (e.g., Prim’s Algorithm vs. Recursive Backtracker).
+
+Testing and Debugging Support:
+
+Consulted on design patterns, such as "effective testing strategies for sort functions" and "parsing logic," then implemented and refactored code based on these insights.
+
+Used to interpret MyPy error messages and provide suggestions for correcting Type Hints.
+
+Boilerplate Code Generation:
+
+Streamlined repetitive, simple tasks and generated templates for documentation strings (docstrings) to improve development efficiency.
