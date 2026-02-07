@@ -175,26 +175,28 @@ daogawa: DFS maze generation, BFS path search, terminal rendering(aborted), docs
 
 ## Resources
 
-・Graph アルゴリズム入門：DFS/BFS などの探索アルゴリズム
+- Graph アルゴリズム入門：DFS/BFS などの探索アルゴリズム \
 https://qiita.com/Tadataka_Takahashi/items/90efc2fc862d32200a45
-・【Pyxel】DFSを使ってランダムにダンジョンを生成する！
+- 【Pyxel】DFSを使ってランダムにダンジョンを生成する！ \
 https://qiita.com/Prosamo/items/40f3847240f473edb209
+- うさぎでもわかる離散数学（グラフ理論）　第13羽　最小全域木の求め方（クラスカル法・プリム法） \
+https://www.momoyama-usagi.com/entry/math-risan13
 
-AI Usage
+## AI Usage
 In alignment with the project guidelines, AI tools (such as ChatGPT and GitHub Copilot) were utilized as supplementary aids for the following tasks. All AI-generated suggestions were thoroughly reviewed, verified, and understood before integration into the project.
 
-Conceptual Understanding and Algorithm Selection:
+### Conceptual Understanding and Algorithm Selection
 
 Deepened understanding of the relationship between "Spanning Trees" in graph theory and maze generation.
 
 Conducted a comparative analysis of the strengths and weaknesses of various algorithms (e.g., Prim’s Algorithm vs. Recursive Backtracker).
 
-Testing and Debugging Support:
+### Testing and Debugging Support
 
 Consulted on design patterns, such as "effective testing strategies for sort functions" and "parsing logic," then implemented and refactored code based on these insights.
 
 Used to interpret MyPy error messages and provide suggestions for correcting Type Hints.
 
-Boilerplate Code Generation:
+### Boilerplate Code Generation:
 
 Streamlined repetitive, simple tasks and generated templates for documentation strings (docstrings) to improve development efficiency.
