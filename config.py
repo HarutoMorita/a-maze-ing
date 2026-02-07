@@ -1,4 +1,5 @@
 from typing import ClassVar
+import os
 
 
 class InvalidFormat(Exception):
@@ -136,6 +137,12 @@ class Config:
         if value == self.path:
             raise InvalidFormat(
                 "OUTPUT_FILE must be different from the config file")
+        if os.path.isdir(value):
+            raise InvalidFormat(f"OUTPUT_FILE must be a file, "
+                                f"not a directory: {value}")
+        parent = os.path.dirname(value) or '.'
+        if not os.access(parent, os.W_OK):
+            raise InvalidFormat(f"Cannot write to the directory: {parent}")
         return value
 
     def _validate_required_keys(self) -> None:
