@@ -68,8 +68,26 @@ Or you can manually execute the program with your own config file.
 ```bash
 % .venv/bin/python3 a_maze_ing.py your_config.txt
 ```
-Here is the config file format.
-Note: # can be used for comments.
+Or
+```bash
+% pip install ./mlx-2.2-py3-none-any.whl
+% pip install -r requirements.txt
+% python3 a_maze_ing.py your_config.txt
+```
+### Config File Format
+**WIDTH** and **HEIGHT** must be a positive integer at most 200. \
+**ENTRY** and **EXIT** must be coordinates within bounds of maze. \
+Coordinates are (X-position, Y-position). \
+**OUTPUT_FILE** must have .txt as extension. \
+If **PERFECT** is set as True, the maze would contain exactly one path between the entry and the exit. \
+**SEED** and **ALGO** are optional keys. \
+**SEED** must be a positive integer, which randomize maze generation.
+If **SEED** is not written, random seed is automatically generated internally. \
+**ALGO** must be **DFS** or **PRIM**, which is the name of algorithm used to generate maze. \
+If **ALGO** is not written, **DFS** is automatically chosen as default algorithm. \
+'#' can be used for comments. \
+
+Here is an default config.
 ```bash
 WIDTH=20
 HEIGHT=15
@@ -103,9 +121,11 @@ The mazegen module has two types of maze generation algorithm.
 
 ### Algorithm
 
-The main(default) algorithm is Depth-First Search.
+The main(default) algorithm is Depth-First Search. DFS algorithm is fundamental algorithm for graph theory and easy to understand. DFS is using stack to choose which path to proceed on.
 
-The alternative algorithm is Prim's Algorithm. It is chosen over Kruskal's Algorithm because path expansion of the Prim's is easier to implement constraints to prevent 2x2 open areas. This algorithm expands the maze by randomly selecting an unvisited cell adjacent to the current path and connecting them. \
+The alternative algorithm is Prim's Algorithm. It is chosen over Kruskal's Algorithm because path expansion of the Prim's is easier to implement constraints to prevent 2x2 open areas. \
+This algorithm expands the maze by randomly selecting an unvisited cell adjacent to the current path and connecting them.
+
 Prim's Algorithm Workflow
 
 1. Add the starting point (entry) to the visited set and add its adjacent cells to the options list.
@@ -124,9 +144,34 @@ The mazegen directory is a standalone module that can be integrated into any Pyt
 
 ## Project Management
 ### What each member has done for this project
-hmorita: Config file parse, Prim's maze generation, MiniLibX rendering, Makefile and setting files.
+hmorita: Config file parse, Prim's maze generation, MiniLibX rendering, Makefile and setting files.　\
 daogawa: DFS maze generation, BFS path search, terminal rendering(aborted), docstring.
 
+### Review on Planning & Evolution:
+
+- Initial Lack of Design: We started without a concrete architectural plan, focusing on individual algorithms. This led to challenges during integration and refactoring.
+
+- Algorithm Shifts: We originally planned to use Kruskal’s and Prim's but changed Kruskal's to DFS due to implementation complexity.
+
+- Rendering Shift: We moved from Terminal to MLX because terminal-based walls made dimensions appear inconsistent with the config values.
+
+### What worked well:
+
+- Generators for Animation: Using Python's yield allowed us to decouple the generation logic from the UI, enabling smooth real-time animation.
+
+- Encapsulation & Separation of Concerns: Moving validation into the MazeGenerator class and strictly separating the core logic from the MLX rendering layer made the engine much more robust. This ensures the module is fully independent and can be reused with any display interface.
+
+### What could be improved:
+
+- Early Design: More time should have been spent on discussing class structures and specifications before coding to reduce refactoring effort.
+
+### Specific Tools:
+
+- GitHub: Utilized collaborator features for remote code sharing.
+
+- VS Code: Primary environment for coding and debugging.
+
+- Gemini: Effectively used for architectural decisions, refactoring, algorithm selection, and documentation efficiency.
 
 ## Resources
 
@@ -153,24 +198,3 @@ Used to interpret MyPy error messages and provide suggestions for correcting Typ
 Boilerplate Code Generation:
 
 Streamlined repetitive, simple tasks and generated templates for documentation strings (docstrings) to improve development efficiency.
-
-
-## Additional Section
-
-### The reason why we chose algorithm
-
-1. DFS (Depth-First Search)
-  DFS algorithm is fundamental algorithm for graph theory and easy to understand.
-  DFS is using stack to choose which path to proceed on.
-2. Prime
-
-### What part of your code is reusable, and how.
-
-
-### Your team and project management with:
-
-#### The roles of each team member.
-
-#### Your anticipated planning and how it evolved until the end
-#### What worked well and what could be improved
-#### Have you used any specific tools? Which ones?
