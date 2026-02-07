@@ -2,17 +2,17 @@
 
 ## Description
 
-"A-Maze-ing" is a Python-based project focused on the algorithmic generation, solving, and visualization of mazes.
+**A-Maze-ing** is a Python-based project focused on the algorithmic generation, solving, and visualization of mazes.
 
 The primary goal of this project is to generate random yet reproducible mazes based on a user-provided configuration file (config.txt). The generated maze is output as hexadecimal data representing wall placements, and can be visualized through both a terminal and a graphical interface.
 
 Key Features:
 
-1. Maze Generation: Generates mazes based on specific width and height settings. When the "Perfect" flag is enabled, the tool creates a "Perfect Maze" with exactly one path between the entrance and the exit. Additionally, the maze features a visually integrated "42" pattern.
+1. **Maze Generation**: Generates mazes based on specific width and height settings. When the "Perfect" flag is enabled, the tool creates a "Perfect Maze" with exactly one path between the entrance and the exit. Additionally, the maze features a visually integrated "42" pattern.
 
-2. Solving & Visualization: Calculates the shortest path of the generated maze and presents it visually using ASCII art or the MiniLibX library.
+2. **Solving & Visualization**: Calculates the shortest path of the generated maze and presents it visually using ASCII art or the MiniLibX library.
 
-3. Code Reusability: The maze generation logic is implemented as a standalone class, designed as a Python package to be easily integrated into future projects.
+3. **Code Reusability**: The maze generation logic is implemented as a standalone class, designed as a Python package to be easily integrated into future projects.
 
 ## Instructions
 This project requires Python 3.10+ and a Linux environment as the MiniLibX binary is built for Linux.
@@ -85,7 +85,7 @@ If **PERFECT** is set as True, the maze would contain exactly one path between t
 If **SEED** is not written, random seed is automatically generated internally. \
 **ALGO** must be **DFS** or **PRIM**, which is the name of algorithm used to generate maze. \
 If **ALGO** is not written, **DFS** is automatically chosen as default algorithm. \
-'#' can be used for comments. \
+'#' can be used for comments.
 
 Here is an default config.
 ```bash
@@ -144,14 +144,12 @@ The mazegen directory is a standalone module that can be integrated into any Pyt
 
 ## Project Management
 ### What each member has done for this project
-hmorita: Config file parse, Prim's maze generation, MiniLibX rendering, Makefile and setting files.　\
-daogawa: DFS maze generation, BFS path search, terminal rendering(aborted), docstring.
+hmorita: Config file parse, Prim's maze generation, MiniLibX rendering, Makefile and Setting files.　\
+daogawa: DFS maze generation, BFS path search, Terminal rendering(aborted), Docstring.
 
 ### Review on Planning & Evolution:
 
 - Initial Lack of Design: We started without a concrete architectural plan, focusing on individual algorithms. This led to challenges during integration and refactoring.
-
-- Algorithm Shifts: We originally planned to use Kruskal’s and Prim's but changed Kruskal's to DFS due to implementation complexity.
 
 - Rendering Shift: We moved from Terminal to MLX because terminal-based walls made dimensions appear inconsistent with the config values.
 
