@@ -17,9 +17,6 @@ Key Features:
 ## Instructions
 This project requires Python 3.10+ and a Linux environment as the MiniLibX binary is built for Linux.
 
-## Instructions
-This project requires Python 3.10+ and a Linux environment as the MiniLibX binary is built for Linux.
-
 ### Installation
 Before running the program, you must set up the environment using `make` or `make install`.
 
@@ -138,8 +135,6 @@ https://qiita.com/Tadataka_Takahashi/items/90efc2fc862d32200a45
 ・【Pyxel】DFSを使ってランダムにダンジョンを生成する！
 https://qiita.com/Prosamo/items/40f3847240f473edb209
 
-42 Tokyoのプロジェクト報告書やREADMEに記載する「AI Usage（AI使用履歴）」として、適切で透明性の高い英語表現に翻訳しました。
-
 AI Usage
 In alignment with the project guidelines, AI tools (such as ChatGPT and GitHub Copilot) were utilized as supplementary aids for the following tasks. All AI-generated suggestions were thoroughly reviewed, verified, and understood before integration into the project.
 
@@ -158,3 +153,24 @@ Used to interpret MyPy error messages and provide suggestions for correcting Typ
 Boilerplate Code Generation:
 
 Streamlined repetitive, simple tasks and generated templates for documentation strings (docstrings) to improve development efficiency.
+
+
+## Additional Section
+
+### The reason why we chose algorithm
+
+1. DFS (Depth-First Search)
+  DFS algorithm is fundamental algorithm for graph theory and easy to understand.
+  DFS is using stack to choose which path to proceed on.
+2. Prime
+
+### What part of your code is reusable, and how.
+
+
+### Your team and project management with:
+
+#### The roles of each team member.
+
+#### Your anticipated planning and how it evolved until the end
+#### What worked well and what could be improved
+#### Have you used any specific tools? Which ones?
