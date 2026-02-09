@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import sys
-from typing import Iterator
+import signal
+from typing import Iterator, Any
 from config import Config, InvalidFormat
 try:
     from mlx import Mlx
@@ -191,7 +192,7 @@ class MazeApp:
         else:
             self.maze.clear_all_paths()
 
-    def _key_handler(self, key: int, param: int) -> int:
+    def _key_handler(self, key: int, param: Any) -> None:
         """Processes keyboard input using standard instance method."""
         try:
             if key == 65307:
@@ -209,40 +210,38 @@ class MazeApp:
                 self._setup(animate=True)
         except (InvalidFormat, ValueError) as e:
             print(f"Config error: {e}", file=sys.stderr)
-        except KeyboardInterrupt:
-            self.mlx.mlx_loop_exit(self.m_ptr)
-        except Exception as e:
-            print(f"Critical error: {e}", file=sys.stderr)
-        return 0
 
-    def _loop_handler(self, param: int) -> int:
+    def _loop_handler(self, param: Any) -> None:
         """Processes animation steps during MLX idle time."""
-        try:
-            if self.anim_it:
-                try:
-                    next(self.anim_it)
-                    self.display.render(self.maze)
-                except StopIteration:
-                    self.anim_it = None
-                    self._save_maze(self.maze)
-                    print(f"Generated: {self._str_maze_info()} Maze")
-        except KeyboardInterrupt:
-            self.mlx.mlx_loop_exit(self.m_ptr)
-        return 0
+        if self.anim_it:
+            try:
+                next(self.anim_it)
+                self.display.render(self.maze)
+            except StopIteration:
+                self.anim_it = None
+                self._save_maze(self.maze)
+                print(f"Generated: {self._str_maze_info()} Maze")
+            except Exception as e:
+                print(f"Animation error: {e}", file=sys.stderr)
+                self.anim_it = None
 
     def run(self) -> None:
         """Starts the MLX application loop."""
-        try:
-            self.mlx.mlx_loop_hook(
-                self.m_ptr, self._loop_handler, None)
-            self.display.render(self.maze)
-            self.mlx.mlx_loop(self.m_ptr)
-        except (KeyboardInterrupt, EOFError):
-            sys.exit(0)
+        self.mlx.mlx_loop_hook(self.m_ptr, self._loop_handler, None)
+        self.display.render(self.maze)
+        self.mlx.mlx_loop(self.m_ptr)
+
+
+def sigint_handler(sig: int, frame: Any) -> None:
+    """Display messages when Ctrl+C is sent to the program"""
+    print("\nCtrl+C is disabled during MLX loop.", file=sys.stderr)
+    print("Click window, then press 'Esc' to exit safely.", file=sys.stderr)
+    print("Or press 'Ctrl + \\' to force kill (Core Dump).", file=sys.stderr)
 
 
 def main() -> None:
     """Entry point with robust error handling for various failure modes."""
+    signal.signal(signal.SIGINT, sigint_handler)
     if len(sys.argv) != 2:
         print("Usage: python3 main.py <config_file>")
         sys.exit(1)
@@ -256,8 +255,6 @@ def main() -> None:
     except (FileNotFoundError, PermissionError) as e:
         print(f"File error: {e}", file=sys.stderr)
         sys.exit(1)
-    except (KeyboardInterrupt, EOFError):
-        sys.exit(0)
     except Exception as e:
         print(f"Critical error: {e}", file=sys.stderr)
         sys.exit(1)
