@@ -29,7 +29,7 @@ class MlxMazeDisplay:
         """Initializes the display window and color palettes."""
         self.mlx = mlx
         self.m_ptr = m_ptr
-        self.c_size = 10
+        self.c_size = 20
 
         self.w_ptr = self.mlx.mlx_new_window(
             m_ptr, width * self.c_size + 1,
