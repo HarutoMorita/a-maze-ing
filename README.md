@@ -123,6 +123,16 @@ The mazegen module has two types of maze generation algorithm.
 
 The main(default) algorithm is Depth-First Search. DFS algorithm is fundamental algorithm for graph theory and easy to understand. DFS is using stack to choose which path to proceed on.
 
+DFS's Algorithm Workflow
+
+1. Prepare stack for LIFO operation and Add the starting point (entry) to it.
+
+2. Also prepare the visited set in order to decide which path to proceed to
+
+3. pop the last added point and randomly find which direction to proceed to.
+
+4. If you find the next point, repeat the process from 1 until find goal point,
+
 The alternative algorithm is Prim's Algorithm. It is chosen over Kruskal's Algorithm because path expansion of the Prim's is easier to implement constraints to prevent 2x2 open areas. \
 This algorithm expands the maze by randomly selecting an unvisited cell adjacent to the current path and connecting them.
 
