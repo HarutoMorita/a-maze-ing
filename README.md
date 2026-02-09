@@ -6,7 +6,7 @@
 
 The primary goal of this project is to generate random yet reproducible mazes based on a user-provided configuration file (config.txt). The generated maze is output as hexadecimal data representing wall placements, and can be visualized through both a terminal and a graphical interface.
 
-Key Features:
+### Key Features:
 
 1. **Maze Generation**: Generates mazes based on specific width and height settings. When the "Perfect" flag is enabled, the tool creates a "Perfect Maze" with exactly one path between the entrance and the exit. Additionally, the maze features a visually integrated "42" pattern.
 
