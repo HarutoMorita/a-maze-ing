@@ -4,7 +4,7 @@
 
 **A-Maze-ing** is a Python-based project focused on the algorithmic generation, solving, and visualization of mazes.
 
-The primary goal of this project is to generate random yet reproducible mazes based on a user-provided configuration file (config.txt). The generated maze is output as hexadecimal data representing wall placements, and can be visualized through both a terminal and a graphical interface.
+The primary goal of this project is to generate random yet reproducible mazes based on a user-provided configuration file (config.txt). The generated maze is output as hexadecimal data representing wall placements, and can be visualized through a graphical interface.
 
 ### Key Features:
 
@@ -75,7 +75,7 @@ Or
 % python3 a_maze_ing.py your_config.txt
 ```
 ### Config File Format
-**WIDTH** and **HEIGHT** must be a positive integer at most 200. \
+**WIDTH** and **HEIGHT** must be a positive integer at most 100. \
 **ENTRY** and **EXIT** must be coordinates within bounds of maze. \
 Coordinates are (X-position, Y-position). \
 **OUTPUT_FILE** must have .txt as extension. \
@@ -187,6 +187,8 @@ daogawa: DFS maze generation, BFS path search, Terminal rendering(aborted), Docs
 https://qiita.com/Tadataka_Takahashi/items/90efc2fc862d32200a45
 - 【Pyxel】DFSを使ってランダムにダンジョンを生成する！ \
 https://qiita.com/Prosamo/items/40f3847240f473edb209
+- うさぎでもわかる離散数学（グラフ理論）　第12羽　幅優先探索・深さ優先探索 \
+https://www.momoyama-usagi.com/entry/math-risan12
 - うさぎでもわかる離散数学（グラフ理論）　第13羽　最小全域木の求め方（クラスカル法・プリム法） \
 https://www.momoyama-usagi.com/entry/math-risan13
 
