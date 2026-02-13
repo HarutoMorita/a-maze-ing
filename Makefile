@@ -60,6 +60,7 @@ test-pkg: build
 	rm -rf test_dir
 	mkdir test_dir
 	$(PYTHON_VER) -m venv test_dir/venv
-	test_dir/venv/bin/pip install dist/*.whl
-	cd test_dir && venv/bin/python3 -c "import mazegen; print('Package import test successful!')"
+	test_dir/venv/bin/pip install *.whl
+	cp a_maze_ing.py config.txt config.py test_dir/
+	cd test_dir && ./venv/bin/python3 a_maze_ing.py config.txt
 	rm -rf test_dir
