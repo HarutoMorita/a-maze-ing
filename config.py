@@ -58,10 +58,15 @@ class Config:
                     line = line.strip()
                     if not line or line.startswith("#"):
                         continue
-                    if "=" not in line:
+
+                    if any(c.isspace() for c in line):
+                        raise InvalidFormat(f"Spaces are not allowed "
+                                            f"at line {lineno}")
+                    parts: list[str] = line.split("=")
+                    if len(parts) != 2:
                         raise InvalidFormat(f"Invalid syntax at line {lineno}")
-                    key, value = line.split("=", 1)
-                    self._data_str[key.strip().upper()] = value.strip()
+                    key, value = parts
+                    self._data_str[key.upper()] = value
         except InvalidFormat:
             raise
         except FileNotFoundError:
@@ -96,7 +101,7 @@ class Config:
         except ValueError:
             raise InvalidFormat(f"{key} must be an integer")
         if key != "SEED" and val_i > 100:
-            raise InvalidFormat(f"{key} must be at most 200")
+            raise InvalidFormat(f"{key} must be at most 100")
         if val_i <= 0:
             raise InvalidFormat(f"{key} must be positive")
         return val_i
