@@ -164,6 +164,9 @@ class MazeApp:
         self.mlx.mlx_key_hook(
             self.display.w_ptr, self._key_handler, None
         )
+        self.mlx.mlx_hook(
+            self.display.w_ptr, 33, 0, self._exit_handler, None
+        )
 
     def _save_maze(self, maze_to_save: Maze) -> None:
         """Saves current maze data and solution path to the output file."""
@@ -173,8 +176,8 @@ class MazeApp:
         try:
             with open(self.cfg.output_file, 'w', encoding='utf-8') as f:
                 f.write(f"{maze_to_save}\n\n")
-                f.write(f"{self.cfg.entry[0]} {self.cfg.entry[1]}\n")
-                f.write(f"{self.cfg.exit[0]} {self.cfg.exit[1]}\n")
+                f.write(f"{self.cfg.entry[0]},{self.cfg.entry[1]}\n")
+                f.write(f"{self.cfg.exit[0]},{self.cfg.exit[1]}\n")
                 f.write(f"{path_str}\n")
         except (PermissionError, OSError) as e:
             print(f"File save error: {e}", file=sys.stderr)
@@ -192,11 +195,18 @@ class MazeApp:
         else:
             self.maze.clear_all_paths()
 
+    def _exit_handler(self, params: Any) -> None:
+        """Handles the window close event and initiates app termination."""
+        if hasattr(self, 'display') and self.display.w_ptr:
+            self.mlx.mlx_destroy_window(self.m_ptr, self.display.w_ptr)
+            self.display.w_ptr = 0
+        self.mlx.mlx_loop_exit(self.m_ptr)
+
     def _key_handler(self, key: int, param: Any) -> None:
         """Processes keyboard input using standard instance method."""
         try:
             if key == 65307:
-                self.mlx.mlx_loop_exit(self.m_ptr)
+                self._exit_handler(None)
             elif key == ord('1'):
                 self._setup(animate=False)
                 self.display.render(self.maze)
@@ -226,10 +236,12 @@ class MazeApp:
                 self.anim_it = None
 
     def run(self) -> None:
-        """Starts the MLX application loop."""
+        """Runs the MLX application loop."""
         self.mlx.mlx_loop_hook(self.m_ptr, self._loop_handler, None)
         self.display.render(self.maze)
         self.mlx.mlx_loop(self.m_ptr)
+        self.mlx.mlx_release(self.m_ptr)
+        sys.exit(0)
 
 
 def sigint_handler(sig: int, frame: Any) -> None:
