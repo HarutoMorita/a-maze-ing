@@ -6,7 +6,6 @@ build-backend = "setuptools.build_meta"
 name = "mazegen"
 version = "1.0.0"
 description = "A maze generator"
-readme = "README.md"
 authors = [
     { name = "Haruto Morita"},
 	{ name = "Daichi Ogawa"}
@@ -29,6 +28,3 @@ exclude = ["venv", ".venv", "build", "__pycache__"]
 [[tool.mypy.overrides]]
 module = "mlx.*"
 ignore_missing_imports = true
-
-[tool.flake8]
-exclude = ["venv", ".venv", "build", "__pycache__"]
