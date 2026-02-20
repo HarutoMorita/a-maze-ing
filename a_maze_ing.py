@@ -46,7 +46,6 @@ class MlxMazeDisplay:
 
     def render(self, maze: Maze) -> None:
         """Draws the entire maze structure and state to the window."""
-
         self.mlx.mlx_clear_window(self.m_ptr, self.w_ptr)
         for y in range(maze.height):
             for x in range(maze.width):
@@ -120,7 +119,7 @@ class MazeApp:
 
     def _print_guide(self) -> None:
         """Prints a clean, formatted guide to the terminal."""
-        print("----- Click window, then press following keys -----")
+        print("----- Click window, then press the following keys -----")
         print("1: Regenerate a new maze.")
         print("2: Show/Hide path from entry to exit.")
         print("3: Change wall color.")
@@ -218,7 +217,7 @@ class MazeApp:
                 self.display.render(self.maze)
             elif key == ord('4'):
                 self._setup(animate=True)
-        except (InvalidFormat, ValueError) as e:
+        except Exception as e:
             print(f"Config error: {e}", file=sys.stderr)
 
     def _loop_handler(self, param: Any) -> None:
@@ -255,7 +254,7 @@ def main() -> None:
     """Entry point with robust error handling for various failure modes."""
     signal.signal(signal.SIGINT, sigint_handler)
     if len(sys.argv) != 2:
-        print("Usage: python3 main.py <config_file>")
+        print("Usage: python3 main.py <config_file>", file=sys.stderr)
         sys.exit(1)
     try:
         setting = Config(sys.argv[1])
