@@ -52,10 +52,10 @@ The main program **a_maze_ing.py** takes **config.txt** as an argument.
 % make debug	# Run in debug mode
 ```
 
-On execution, a window will pop up and display a maze generated with the settings specified in the config.txt. \
-The following guide for window operations will be displayed on your terminal.
+On execution, a window will pop up and display a maze generated with the settings specified in config.txt. \
+The following controls will be displayed on your terminal.
 ```zsh
------ Click window, then press following keys -----
+----- Click window, then press the following keys -----
 1: Regenerate a new maze.
 2: Show/Hide path from entry to exit.
 3: Change wall color.
@@ -64,15 +64,15 @@ Esc: Exit immediately.
 ```
 
 You can create your own maze by modifying **config.txt**. \
-Or you can manually execute the program with your own config file.
+Alternatively, you can manually execute the program with your own config file.
 ```bash
-% .venv/bin/python3 a_maze_ing.py your_config.txt
+% .venv/bin/python3 a_maze_ing.py <your_config.txt>
 ```
-Or
+If you would like to execute the program without using a virtual environment, run these commands.
 ```bash
 % pip install ./mlx-2.2-py3-none-any.whl
 % pip install -r requirements.txt
-% python3 a_maze_ing.py your_config.txt
+% python3 a_maze_ing.py <your_config.txt>
 ```
 ### Config File Format
 **WIDTH** and **HEIGHT** must be a positive integer at most 100. \
@@ -121,7 +121,7 @@ The mazegen module has two types of maze generation algorithm.
 
 ### Algorithm
 
-The main(default) algorithm is Depth-First Search. DFS algorithm is fundamental algorithm for graph theory and easy to understand. DFS is using stack to choose which path to proceed on.
+The main(default) algorithm is Depth-First Search. It is chosen as primal algorithm because the algorithm is not complicated to implement and generated maze would be challenging maze with long and winding paths. DFS algorithm is fundamental algorithm for graph theory and easy to understand. DFS is using stack to choose which path to proceed on.
 
 DFS's Algorithm Workflow
 
@@ -151,6 +151,40 @@ Prim's Algorithm Workflow
 ### Reusability
 
 The mazegen directory is a standalone module that can be integrated into any Python project. As it is mentioned above, `make build` build a reusable package from the directory. Maze generation and solving logic, which the module is responsible for, are entirely separated from the MLX display code. You can reuse the mazegen package by installing the built .whl file.
+
+### How to use mazegen module
+
+This module has 4 classes, **Cell**, **Maze**, **MazeGenerator**, and **MazeSolver**.
+- **Cell** manages status data of each cell consisting Maze.
+- **Maze** manages structural data of maze grid made of Cell.
+- **MazeGenerator** generates a 2D maze based on passed config data.
+- **MazeSolver** find the shortest path from entry to exit.
+```bash
+# How to use MazeGenerator
+gen = MazeGenerator(
+            20,      # WIDTH
+			15,      # HEIGHT
+			(0,0),   # ENTRY
+			(19,14), # EXIT
+            True,    # PERFECT
+			42,      # SEED (Optional)
+			"DFS"    # ALGO (Optional)
+        )
+gen.generate()
+maze: Maze = gen.maze
+
+# Maze instances's attributes
+width: int = maze.width
+height: int = maze.height
+entry: tuple[int, int] = maze.entry
+exit_: tuple[int, int] = maze.exit_
+grid: list[list[Cell]] = maze.grid
+
+# How to use MazeSolver
+solver = MazeSolver(maze)
+paths: list[list[str]] = solver.solve()
+
+```
 
 ## Project Management
 ### What each member has done for this project
