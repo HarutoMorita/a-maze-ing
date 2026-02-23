@@ -54,7 +54,7 @@ The main program **a_maze_ing.py** takes **config.txt** as an argument.
 
 On execution, a window will pop up and display a maze generated with the settings specified in config.txt. \
 The following controls will be displayed on your terminal.
-```zsh
+```text
 ----- Click window, then press the following keys -----
 1: Regenerate a new maze.
 2: Show/Hide path from entry to exit.
@@ -88,7 +88,7 @@ If **ALGO** is not written, **DFS** is automatically chosen as default algorithm
 '#' can be used for comments.
 
 Here is an default config.
-```bash
+```text
 WIDTH=20
 HEIGHT=15
 ENTRY=0,0
@@ -159,7 +159,7 @@ This module has 4 classes, **Cell**, **Maze**, **MazeGenerator**, and **MazeSolv
 - **Maze** manages structural data of maze grid made of Cell.
 - **MazeGenerator** generates a 2D maze based on passed config data.
 - **MazeSolver** find the shortest path from entry to exit.
-```bash
+```python
 # How to use MazeGenerator
 gen = MazeGenerator(
             20,      # WIDTH
